@@ -1,3 +1,3 @@
 Go into bin.
 cmake ../src
-cmake build .
+cmake --build .
