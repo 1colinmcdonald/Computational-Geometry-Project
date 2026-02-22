@@ -1,4 +1,18 @@
-cmake_minimum_required(VERSION 3.31.6)
-project(Hello)
-add_executable(Hello test.cpp)
+cmake_minimum_required(VERSION 3.16)
+project(proj LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(CGAL REQUIRED)
+
 add_executable(points points_and_segment.cpp)
+
+# Works if CGAL provides imported targets
+if(TARGET CGAL::CGAL)
+  target_link_libraries(points PRIVATE CGAL::CGAL)
+else()
+  # Fallback for older CGAL CMake configs
+  include(${CGAL_USE_FILE})
+  target_link_libraries(points PRIVATE ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES})
+endif()
