@@ -1,0 +1,4 @@
+cmake_minimum_required(VERSION 3.31.6)
+project(Hello)
+add_executable(Hello test.cpp)
+add_executable(points points_and_segment.cpp)
