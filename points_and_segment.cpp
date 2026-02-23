@@ -1,6 +1,10 @@
 #include <iostream>
 #include <CGAL/Simple_cartesian.h>
 #include <list>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/ch_graham_andrew.h>
+
+typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 using namespace std;
 
 typedef CGAL::Simple_cartesian<double> Kernel;
@@ -65,6 +69,13 @@ int main()
     points_list.push_back(p);
     points_list.push_back(q);
     auto output = graham(points_list);
+    std::cout << "yo" << "\n";
+	CGAL::IO::set_ascii_mode(std::cin);
+	CGAL::IO::set_ascii_mode(std::cout);
+	std::istream_iterator< Point_2 > in_start( std::cin );
+	std::istream_iterator< Point_2 > in_end;
+	std::ostream_iterator< Point_2 > out( std::cout, "\n" );
+	CGAL::ch_graham_andrew( in_start, in_end, out );
     // std::cout << output << "\n";
     // Segment_2 s(p, q);
     // std::cout << "Segment: " << s << "\n";

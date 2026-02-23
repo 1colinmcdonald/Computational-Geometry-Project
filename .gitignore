@@ -40,5 +40,5 @@
 # debug information files
 *.dwo
 
-bin
+build
 .vscode
