@@ -44,9 +44,12 @@ vector<Point_2> jarvis(std::vector<Point_2> points)
 				{
 					p = q;
 				}
-				else if (CGAL::orientation(hull.back(), q, *p) == CGAL::LEFT_TURN)
+				else if (orientation(hull.back(), q, *p) == CGAL::LEFT_TURN)
 				{
-					cout << "hi" << "\n";
+					p = q;
+				}
+				else if (orientation(hull.back(), q, *p) == CGAL::COLLINEAR and squared_distance(q, hull.back()) > squared_distance(*p, hull.back()))
+				{
 					p = q;
 				}
 			}
@@ -142,7 +145,7 @@ int main()
 	Point_2 lowest = get_lowest(pts);
 	plot.add_point(lowest.x(), lowest.y(), 4, "red", "red");
 
-	for (auto& q : j_hull) plot.add_point(q.x(), q.y(), 4, "red", "red");
+	for (auto& q : hull) plot.add_point(q.x(), q.y(), 4, "red", "red");
 
 	std::vector<std::pair<double, double>> poly;
 	for (auto& q : j_hull) poly.push_back({q.x(), q.y()});
