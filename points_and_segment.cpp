@@ -5,8 +5,9 @@
 #include <CGAL/ch_graham_andrew.h>
 #include <CGAL/Polygon_2.h>
 #include <CGAL/Point_set_2.h>
+#include <algorithm> // std::min_element
 
-// For CGAL::draw()
+
 #include <vector>
 #include "svg_plot.h"
 
@@ -28,6 +29,23 @@ vector<Point_2> graham(std::vector<Point_2> points)
 // {
 //     auto v0 = numeric_limits<double>::infinity();
 // }
+
+bool y_comp(Point_2 a, Point_2 b)
+{
+	if (a.y() < b.y()) {
+		return true;
+	}
+	if (a.y() == b.y()) {
+		return a.x() <= b.x();
+	}
+	return false;
+}
+
+Point_2 get_lowest(vector<Point_2> points)
+{
+	return *min_element(points.begin(), points.end(), y_comp);
+}
+
 
 
 bool same_hull(vector<Point_2> hull1, vector<Point_2> hull2)
@@ -85,7 +103,10 @@ int main()
 	std::vector<Point_2> hull;
 	CGAL::ch_graham_andrew(pts.begin(), pts.end(), std::back_inserter(hull));
 
-	for (auto& q : hull) plot.add_point(q.x(), q.y(), 4, "red", "red");
+	Point_2 lowest = get_lowest(pts);
+	plot.add_point(lowest.x(), lowest.y(), 4, "red", "red");
+
+	// for (auto& q : hull) plot.add_point(q.x(), q.y(), 4, "red", "red");
 
 	std::vector<std::pair<double, double>> poly;
 	for (auto& q : hull) poly.push_back({q.x(), q.y()});
@@ -96,6 +117,8 @@ int main()
     // std::cout << output << "\n";
     // Segment_2 s(p, q);
     // std::cout << "Segment: " << s << "\n";
+	Point_2 p2(1, 2);
+	std::cout << p2.y() << "\n";
     return 0;
 }
 
