@@ -6,10 +6,11 @@
 #include <CGAL/Polygon_2.h>
 #include <CGAL/Point_set_2.h>
 #include <algorithm> // std::min_element
-
+#include <CGAL/enum.h>
 
 #include <vector>
 #include "svg_plot.h"
+#include "points_and_segment.h"
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 using namespace std;
@@ -25,10 +26,39 @@ vector<Point_2> graham(std::vector<Point_2> points)
     return points;
 }
 
-// vector<Point_2> jarvis(std::vector<Point_2> points)
-// {
-//     auto v0 = numeric_limits<double>::infinity();
-// }
+vector<Point_2> jarvis(std::vector<Point_2> points)
+{
+	Point_2 v1 = get_lowest(points);
+	Point_2 v0(-numeric_limits<double>::infinity(), v1.y());
+	vector<Point_2> hull;
+	hull.push_back(v0);
+	hull.push_back(v1);
+	while (true)
+	{
+		optional<Point_2> p;
+		for (auto& q : points)
+		{
+			if (q != *(hull.rbegin() + 1) && q != hull.back())
+			{
+				if (!p)
+				{
+					p = q;
+				}
+				else if (CGAL::orientation(hull.back(), q, *p) == CGAL::LEFT_TURN)
+				{
+					cout << "hi" << "\n";
+					p = q;
+				}
+			}
+		}	
+		if (p == v1)
+		{
+			return vector<Point_2>(begin(hull) + 1, end(hull));
+		}
+		hull.push_back(*p);
+	}
+	return points;
+}
 
 bool y_comp(Point_2 a, Point_2 b)
 {
@@ -102,14 +132,20 @@ int main()
 	// 2) Compute convex hull points
 	std::vector<Point_2> hull;
 	CGAL::ch_graham_andrew(pts.begin(), pts.end(), std::back_inserter(hull));
+	std::vector<Point_2> j_hull = jarvis(pts);
+	for (Point_2 t : j_hull)
+	{
+		cout << t << " ";
+	}
 
+	cout << "\n";
 	Point_2 lowest = get_lowest(pts);
 	plot.add_point(lowest.x(), lowest.y(), 4, "red", "red");
 
-	// for (auto& q : hull) plot.add_point(q.x(), q.y(), 4, "red", "red");
+	for (auto& q : j_hull) plot.add_point(q.x(), q.y(), 4, "red", "red");
 
 	std::vector<std::pair<double, double>> poly;
-	for (auto& q : hull) poly.push_back({q.x(), q.y()});
+	for (auto& q : j_hull) poly.push_back({q.x(), q.y()});
 	plot.add_polyline(poly, 2.5, "blue", true);
 	plot.write("debug.svg");
 	std::cout << "Wrote debug.svg\n";
