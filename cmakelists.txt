@@ -7,7 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(CGAL REQUIRED)
 
-add_executable(points points_and_segment.cpp)
+add_executable(benchmark benchmark.cpp)
+target_precompile_headers(points PRIVATE benchmark.h)
 
 # Works if CGAL provides imported targets
 if(TARGET CGAL::CGAL)
