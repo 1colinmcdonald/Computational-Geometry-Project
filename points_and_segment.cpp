@@ -20,6 +20,10 @@ typedef Kernel::Point_2 Point_2;
 typedef Kernel::Segment_2 Segment_2;
 typedef CGAL::Polygon_2<K> Polygon_2;
 
+
+std::random_device rd;        // Seed source
+std::mt19937 gen(rd()); 
+    
 vector<Point_2> graham(std::vector<Point_2> points)
 {
 
@@ -63,6 +67,166 @@ vector<Point_2> jarvis(std::vector<Point_2> points)
 	return points;
 }
 
+vector<Point_2> ray_shooting_quickhull(std::vector<Point_2> points)
+{
+	Point_2 v1 = get_lowest(points);
+	Point_2 v0(-numeric_limits<double>::infinity(), v1.y());
+	vector<Point_2> hull;
+	
+    Point_2 left_most = get_lowest(points);
+    Point_2 right_most = get_highest(points);
+
+    srand (time(NULL));
+
+    if (left_most == right_most) {
+        // All points are the same
+        return { left_most };
+    }
+
+    vector<Point_2> above_set;
+    vector<Point_2> below_set;
+
+    double line_slope;
+    double line_intercept;
+    line_to_slope_and_intercept(left_most, right_most, &line_slope, &line_intercept);
+
+    for (const auto& p : points) {
+        double position = line_slope * p.x() + line_intercept - p.y();
+        if (position >= 0) {
+            above_set.push_back(p);
+        } else if (position < 0) {
+            below_set.push_back(p);
+        }
+    }
+
+    // Find farthest point from the line
+    double max_dist_above = -1;
+    Point_2 farthest_point_above;
+    for (const auto& p : above_set) {
+        double dist = get_squared_distance_from_line(p, line_slope, line_intercept);
+        if (dist > max_dist_above) {
+            max_dist_above = dist;
+            farthest_point_above = p;
+        }
+    }
+
+    double max_dist_below = -1;
+    Point_2 farthest_point_below;
+    for (const auto& p : below_set) {
+        double dist = get_squared_distance_from_line(p, line_slope, line_intercept);
+        if (dist > max_dist_below) {
+            max_dist_below = dist;
+            farthest_point_below = p;
+        }
+    } 
+
+
+    // Remove points inside triangle, formed by left_most, right_most and farthest_point
+    vector<Point_2> new_above_set;
+    for (const auto& p : above_set) {
+        if (!check_inside_triangle(p, left_most, right_most, farthest_point_above)) {
+            new_above_set.push_back(p);
+        }
+    }
+    vector<Point_2> new_below_set;
+    for (const auto& p : below_set) {
+        if (!check_inside_triangle(p, left_most, right_most, farthest_point_below)) {
+            new_below_set.push_back(p);
+        }
+    }
+
+
+	return points;
+}
+
+vector <Point_2> ray_shooting_quickhull_recurse(std::vector<Point_2> points, Point_2 a, Point_2 b)
+{   
+    int rand_q_index = rand() % points.size();
+    Point_2 q = points[rand_q_index];
+
+    Point_2 v = r - p;
+    Point_2 n(-v.y(), v.x()); // Perpendicular vector
+
+}
+
+void ray_shoot(std::vector<Point_2> points, Point_2 q, Point_2 p, Point_2 r)
+{
+    Point_2 s, t;
+    s = q;
+    t = q;
+
+    std::shuffle(points.begin(), points.end(), engine);
+
+    // Project q onto pr
+    Point_2 pr = r - p;
+    Point_2 pq = q - p;
+    double t_proj = (pq.x() * pr.x() + pq.y() * pr.y()) / (pr.x() * pr.x() + pr.y() * pr.y());
+    Point_2 q_proj = Point_2(p.x() + t_proj * pr.x(), p.y() + t_proj * pr.y());
+
+
+    for (const auto& pi : points) {
+        if ((s == t) || orientation(s, t, pi) == CGAL::LEFT_TURN) {
+            // Above the line
+            // Check side to see if q is on the left halfplane defined by perpendicular ray q away from line pr
+            if (orientation(q_proj, q, pi) == CGAL::LEFT_TURN) {
+                // q is on the left halfplane
+                
+                // TODO: Find point t' in Sr such that pit' minimizes the angle with the x-axis.
+            }
+
+        } else {
+            // Below the line
+        }
+    }
+
+
+}
+
+
+// From https://gamedev.stackexchange.com/questions/23743/whats-the-most-efficient-way-to-find-barycentric-coordinates
+void Barycentric(Point_2 p, Point_2 a, Point_2 b, Point_2 c, float &u, float &v, float &w)
+{
+    Point_2 v0 = b - a, v1 = c - a, v2 = p - a;
+    float d00 = Dot(v0, v0);
+    float d01 = Dot(v0, v1);
+    float d11 = Dot(v1, v1);
+    float d20 = Dot(v2, v0);
+    float d21 = Dot(v2, v1);
+    float denom = d00 * d11 - d01 * d01;
+    v = (d11 * d20 - d01 * d21) / denom;
+    w = (d00 * d21 - d01 * d20) / denom;
+    u = 1.0f - v - w;
+}
+
+double check_inside_triangle(Point_2 p, Point_2 a, Point_2 b, Point_2 c)
+{
+
+    if (p == a || p == b || p == c)
+        return true;
+
+    double u,v,w;
+    Barycentric(p, a, b, c, &u, &v, &w);
+
+    return 0 <= u && u <= 1 && 0 <= v && v <= 1 && 0 <= w && w <= 1;
+}
+
+void line_to_slope_and_intercept(Point_2 a, Point_2 b, double& slope, double& intercept)
+{
+    assert(a.x() != b.x()); // Ensure we don't have vertical lines
+    slope = (b.y() - a.y()) / (b.x() - a.x());
+    intercept = a.y() - slope * a.x();
+}
+
+
+double get_squared_distance_from_line(Point_2 p, double slope, double intercept)
+{
+    // Distance from point to line squared = (Ax + By + C)^2 / (A^2 + B^2) where line is Ax + By + C = 0
+    double A = -slope;
+    double B = 1;
+    double C = -intercept;
+    return (A * p.x() + B * p.y() + C) * (A * p.x() + B * p.y() + C) / (A * A + B * B);
+}
+
 bool y_comp(Point_2 a, Point_2 b)
 {
 	if (a.y() < b.y()) {
@@ -78,6 +242,12 @@ Point_2 get_lowest(vector<Point_2> points)
 {
 	return *min_element(points.begin(), points.end(), y_comp);
 }
+
+Point_2 get_highest(vector<Point_2> points)
+{
+	return *max_element(points.begin(), points.end(), y_comp);
+}
+
 
 
 
