@@ -4,7 +4,7 @@
 
 #include <vector>
 #include "svg_plot.h"
-#include "points_and_segment.h"
+#include "benchmark.h"
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 using namespace std;
@@ -16,7 +16,6 @@ typedef CGAL::Polygon_2<K> Polygon_2;
 
 vector<Point_2> graham(std::vector<Point_2> points)
 {
-
     return points;
 }
 
@@ -76,10 +75,98 @@ void test_same_hull()
     IS_TRUE(!same_hull(hull1, hull3));
 }
 
+
+vector<Point_2> jarvis(std::vector<Point_2> points)
+{
+    Point_2 v1 = get_lowest(points);
+    Point_2 v0(-numeric_limits<double>::infinity(), v1.y());
+    vector<Point_2> hull;
+    hull.push_back(v0);
+    hull.push_back(v1);
+    while (true)
+    {
+        optional<Point_2> p;
+        for (auto& q : points)
+        {
+            if (q != *(hull.rbegin() + 1) && q != hull.back())
+            {
+                if (!p)
+                {
+                    p = q;
+                }
+                else if (orientation(hull.back(), q, *p) == CGAL::LEFT_TURN)
+                {
+                    p = q;
+                }
+                else if (orientation(hull.back(), q, *p) == CGAL::COLLINEAR and squared_distance(q, hull.back()) > squared_distance(*p, hull.back()))
+                {
+                    p = q;
+                }
+            }
+        }
+        if (p == v1)
+        {
+            return vector<Point_2>(begin(hull) + 1, end(hull));
+        }
+        hull.push_back(*p);
+    }
+    return points;
+}
+
 int main(int argc, char* argv[])
 {
     std::function<std::vector<Point_2>(std::vector<Point_2>)> convex_hull_algo;
-    
+
+    CGAL::IO::set_ascii_mode(std::cin);
+    CGAL::IO::set_ascii_mode(std::cout);
+    while (true)
+    {
+        try {
+            std::vector<Point_2> pts;
+            std::string line;
+
+            while (std::getline(std::cin, line))
+            {
+                if (line == "RUN")
+                {
+                    break;
+                }
+
+                // Try to parse line as a point (x y format)
+                std::istringstream iss(line);
+                double x, y;
+                if (iss >> x >> y)
+                {
+                    pts.push_back(Point_2(x, y));
+                }
+            }
+
+            // If we hit EOF without RUN, exit
+            if (std::cin.eof() && line != "RUN")
+            {
+                break;
+            }
+
+            if (!pts.empty())
+            {
+                std::vector<Point_2> hull;
+                hull = jarvis(pts);
+
+                for (const auto& p : hull)
+                {
+                    std::cout << p << "\n";
+                }
+            }
+            std::cout << "\n"<< std::flush;
+        } catch (const std::exception& e) {
+            std::cerr << "Error: " << e.what() << std::endl;
+            return 2;
+        } catch (...) {
+            std::cerr << "Unknown error occurred." << std::endl;
+            return 3;
+        }
+
+    }
     // Take CLI arg for what algo to run
     if (argc > 1)
     {
@@ -101,7 +188,7 @@ int main(int argc, char* argv[])
         }
         else if (algo == "jarvis")
         {
-            convex_hull_algo = jarvis;
+            convex_hull_algo = jarvis(pts);
         }
         else
         {
@@ -114,59 +201,9 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-	CGAL::IO::set_ascii_mode(std::cin);
-	CGAL::IO::set_ascii_mode(std::cout);
 	
-	while (true)
-	{
-        try {
-            std::vector<Point_2> pts;
-            std::string line;
-            
-            while (std::getline(std::cin, line))
-            {
-                if (line == "RUN")
-                {
-                    break;
-                }
-                
-                // Try to parse line as a point (x y format)
-                std::istringstream iss(line);
-                double x, y;
-                if (iss >> x >> y)
-                {
-                    pts.push_back(Point_2(x, y));
-                }
-            }
-            
-            // If we hit EOF without RUN, exit
-            if (std::cin.eof() && line != "RUN")
-            {
-                break;
-            }
-            
-            if (!pts.empty())
-            {
-                std::vector<Point_2> hull;
-                hull = jarvis(pts);
-                
-                for (const auto& p : hull)
-                {
-                    std::cout << p << "\n";
-                }
-            }
-            std::cout << "\n"<< std::flush;
-        } catch (const std::exception& e) {
-            std::cerr << "Error: " << e.what() << std::endl;
-            return 2;
-        } catch (...) {
-            std::cerr << "Unknown error occurred." << std::endl;
-            return 3;
-        }
-		
-	}
-	
-	;
+
+
 void plot_hull(std::vector<Point_2> points, std::vector<Point_2> hull)
 {
 	SvgPlot plot;

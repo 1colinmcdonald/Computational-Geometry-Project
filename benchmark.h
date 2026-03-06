@@ -6,8 +6,8 @@
 #include <CGAL/enum.h>
 #include <vector>
 #include <chrono>
-#ifndef POINTS_AND_SEGMENT_H
-#define POINTS_AND_SEGMENT_H
+#ifndef BENCHMARK_H
+#define BENCHMARK_H
 
 using namespace std;
 typedef CGAL::Simple_cartesian<double> Kernel;

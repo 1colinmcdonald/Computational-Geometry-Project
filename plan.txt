@@ -1,0 +1,3 @@
+Implement Jarvis march
+Implement Graham's scan
+Benchmark the two algorithms
