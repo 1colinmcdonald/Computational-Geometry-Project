@@ -1,0 +1,5 @@
+Our Jarvis March algorithm run 100 times in a for loop on random_points_10000_many_hull.txt got a total runtime of 57207ms
+CGAL's algorithm run 100 times in a for loop on random_points_10000_many_hull.txt got a total runtime of 1118ms
+So currently CGAL's algorithm is about 67 times faster than ours.
+
+After building in release mode, our Jarvis March algorithm took 439 ms. CGAL's algorithm took 43 ms

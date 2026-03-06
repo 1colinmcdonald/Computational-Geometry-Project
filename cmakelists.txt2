@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 3.26)
+cmake_policy(SET CMP0167 NEW)
+project(proj LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(CGAL REQUIRED)
+
+add_executable(benchmark benchmark.cpp)
+target_precompile_headers(benchmark PRIVATE benchmark.h)
+target_link_libraries(benchmark PRIVATE CGAL::CGAL)
