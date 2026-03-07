@@ -49,3 +49,5 @@ bin/
 runner/.hypothesis
 runner/.pytest_cache
 runner/__pycache__
+
+*.svg
