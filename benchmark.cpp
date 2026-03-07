@@ -154,9 +154,6 @@ int main(int argc, char* argv[])
 	string algo_arg = argv[1];
 	string num_points = argv[2];
 	string distribution = argv[3];
-	cout << "algo: " << algo_arg << endl;
-	cout << "num_points: " << num_points << endl;
-	cout << "distribution: " << distribution << endl;
 
 	if (algo_arg == "jarvis") {
 		algo = [](auto f, auto l, auto o) { return jarvis(f, l, o); };	
@@ -176,7 +173,7 @@ int main(int argc, char* argv[])
 		pts.emplace_back(x, y);
 	}
 
-	/*
+
 	auto t1 = std::chrono::high_resolution_clock::now();
 	algo(pts.begin(), pts.end(), std::back_inserter(hull));
 	auto t2 = std::chrono::high_resolution_clock::now();
@@ -184,7 +181,7 @@ int main(int argc, char* argv[])
 	std::cout << "Time: "
 			  << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
 			  << " ms\n";
-			  */
+	plot_hull(pts, hull);
 
 
     if (argc > 1)
@@ -234,16 +231,9 @@ int main(int argc, char* argv[])
 	std::vector<Point_2> hull = test_cgal_graham(pts);
 	std::vector<Point_2> j_hull = jarvis(pts);
 	*/
-	auto t1 = high_resolution_clock::now();
-	/*
-	auto total_len = test_jarvis(pts);
-	*/
-	auto t2 = high_resolution_clock::now();
-	auto ms_int = duration_cast<milliseconds>(t2 - t1);
 	/*
 	std::cout << total_len << std::endl;
 	*/
-	std::cout << ms_int.count() << "ms\n";
 
 	/* 
 	for (Point_2 t : j_hull)
