@@ -21,9 +21,26 @@ typedef Kernel::Point_2 Point_2;
 typedef Kernel::Segment_2 Segment_2;
 typedef CGAL::Polygon_2<K> Polygon_2;
 
-vector<Point_2> graham(std::vector<Point_2> points)
+vector<Point_2> graham(std::vector<Point_2>& points)
 {
-
+	/*
+	std::sort(points.begin(), points.end());
+	vector<Point_2> l_upper;
+	l_upper.push_back(points[0]);
+	l_upper.push_back(points[1]);
+	for (int i = 3; i < points.size(); i++)
+	{
+		l_upper.push_back(points[i]);
+				else if (orientation(hull.back(), q, *p) == CGAL::LEFT_TURN)
+		while (l_upper.size() > 2 && 
+				orientation(l_upper[l_upper.size() - 3], 
+							l_upper[l_upper.size() - 2], 
+							l_upper[l_upper.size() - 1]) != CGAL::RIGHT_TURN)
+		{
+			
+		}
+	}
+	*/
     return points;
 }
 
