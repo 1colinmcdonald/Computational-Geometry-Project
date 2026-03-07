@@ -1,0 +1,7 @@
+Implement Jarvis march
+Implement Graham's scan
+Benchmark the two algorithms
+Have the usage be: ./benchmark graham num_points distribution_type
+We don't have to benchmark more than 5 seconds per algorithm.
+How to take args in C++.
+Print args to stdout in C++.

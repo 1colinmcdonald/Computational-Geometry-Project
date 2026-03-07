@@ -7,6 +7,7 @@
 #include <CGAL/Point_set_2.h>
 #include <algorithm> // std::min_element
 #include <CGAL/enum.h>
+#include <chrono>
 
 #include <vector>
 #include "svg_plot.h"
@@ -20,13 +21,30 @@ typedef Kernel::Point_2 Point_2;
 typedef Kernel::Segment_2 Segment_2;
 typedef CGAL::Polygon_2<K> Polygon_2;
 
-vector<Point_2> graham(std::vector<Point_2> points)
+vector<Point_2> graham(std::vector<Point_2>& points)
 {
-
+	/*
+	std::sort(points.begin(), points.end());
+	vector<Point_2> l_upper;
+	l_upper.push_back(points[0]);
+	l_upper.push_back(points[1]);
+	for (int i = 3; i < points.size(); i++)
+	{
+		l_upper.push_back(points[i]);
+				else if (orientation(hull.back(), q, *p) == CGAL::LEFT_TURN)
+		while (l_upper.size() > 2 && 
+				orientation(l_upper[l_upper.size() - 3], 
+							l_upper[l_upper.size() - 2], 
+							l_upper[l_upper.size() - 1]) != CGAL::RIGHT_TURN)
+		{
+			
+		}
+	}
+	*/
     return points;
 }
 
-vector<Point_2> jarvis(std::vector<Point_2> points)
+vector<Point_2> jarvis(const std::vector<Point_2>& points)
 {
 	Point_2 v1 = get_lowest(points);
 	Point_2 v0(-numeric_limits<double>::infinity(), v1.y());
@@ -48,7 +66,7 @@ vector<Point_2> jarvis(std::vector<Point_2> points)
 				{
 					p = q;
 				}
-				else if (orientation(hull.back(), q, *p) == CGAL::COLLINEAR && squared_distance(q, hull.back()) > squared_distance(*p, hull.back()))
+				else if (orientation(hull.back(), q, *p) == CGAL::COLLINEAR and squared_distance(q, hull.back()) > squared_distance(*p, hull.back()))
 				{
 					p = q;
 				}
@@ -119,96 +137,94 @@ void test_same_hull()
     IS_TRUE(!same_hull(hull1, hull3));
 }
 
-int main(int argc, char* argv[])
+int test_jarvis(std::vector<Point_2> pts)
 {
-    std::function<std::vector<Point_2>(std::vector<Point_2>)> convex_hull_algo;
-    
-    // Take CLI arg for what algo to run
-    if (argc > 1)
-    {
-        string algo = argv[1];
-        if (algo == "test")
-        {
-            test_same_hull();
-            return 0;
-        }
-        else if (algo == "graham")
-        {
-            convex_hull_algo = [](std::vector<Point_2> points)
-            {
-                std::vector<Point_2> result;
-                CGAL::ch_graham_andrew(points.begin(), points.end(),
-                                    std::back_inserter(result));
-                return result;
-            };
-        }
-        else if (algo == "jarvis")
-        {
-            convex_hull_algo = jarvis;
-        }
-        else
-        {
-            std::cerr << "Unknown algorithm: " << algo << ". Use 'test', 'graham', or 'jarvis'." << std::endl;
-            return 1;
-        }
-    }
-    else {
-        std::cerr << "No algorithm specified. Use 'test', 'graham', or 'jarvis' as an argument." << std::endl;
-        return 1;
-    }
+	volatile std::size_t sink = 0;
+	std::vector<long long> times;
+	for (int i = 0; i < 5; i++)
+	{
+		auto t1 = std::chrono::high_resolution_clock::now();
+		auto hull = jarvis(pts);
+		sink += hull.size();
+		auto t2 = std::chrono::high_resolution_clock::now();
+		auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+		times.push_back(ms);
+	}
+	std::sort(times.begin(), times.end());
+	cout << sink << endl;
+	long long median = times[times.size() / 2];
+	return median;
+}
 
+std::vector<Point_2> test_cgal_graham(std::vector<Point_2> pts)
+{
+	volatile std::size_t sink = 0;
+	std::vector<Point_2> hull;
+	for (int i = 0; i < 100; i++)
+	{
+		hull.clear();
+		CGAL::ch_graham_andrew(pts.begin(), pts.end(), std::back_inserter(hull));
+		sink += hull.size();
+	}
+	return hull;
+}
+
+int main()
+{
+
+	using std::chrono::high_resolution_clock;
+	using std::chrono::duration_cast;
+	using std::chrono::duration;
+	using std::chrono::milliseconds;
+
+    // test_same_hull();
+    std::vector<Point_2> points_list;
 	CGAL::IO::set_ascii_mode(std::cin);
 	CGAL::IO::set_ascii_mode(std::cout);
-	
-	while (true)
+	SvgPlot plot;
+	// 1) Read all input points
+	std::vector<Point_2> pts;
+	Point_2 p;
+	while (std::cin >> p) pts.push_back(p);
+	for (auto& q : pts) plot.add_point(q.x(), q.y(), 3, "gray", "gray");
+
+	// 2) Compute convex hull points
+
+	/*
+	std::vector<Point_2> hull = test_cgal_graham(pts);
+	std::vector<Point_2> j_hull = jarvis(pts);
+	*/
+	auto t1 = high_resolution_clock::now();
+	auto total_len = test_jarvis(pts);
+	auto t2 = high_resolution_clock::now();
+	auto ms_int = duration_cast<milliseconds>(t2 - t1);
+	std::cout << total_len << std::endl;
+	std::cout << ms_int.count() << "ms\n";
+
+	/* 
+	for (Point_2 t : j_hull)
 	{
-        try {
-            std::vector<Point_2> pts;
-            std::string line;
-            
-            while (std::getline(std::cin, line))
-            {
-                if (line == "RUN")
-                {
-                    break;
-                }
-                
-                // Try to parse line as a point (x y format)
-                std::istringstream iss(line);
-                double x, y;
-                if (iss >> x >> y)
-                {
-                    pts.push_back(Point_2(x, y));
-                }
-            }
-            
-            // If we hit EOF without RUN, exit
-            if (std::cin.eof() && line != "RUN")
-            {
-                break;
-            }
-            
-            if (!pts.empty())
-            {
-                std::vector<Point_2> hull;
-                hull = jarvis(pts);
-                
-                for (const auto& p : hull)
-                {
-                    std::cout << p << "\n";
-                }
-            }
-            std::cout << "\n"<< std::flush;
-        } catch (const std::exception& e) {
-            std::cerr << "Error: " << e.what() << std::endl;
-            return 2;
-        } catch (...) {
-            std::cerr << "Unknown error occurred." << std::endl;
-            return 3;
-        }
-		
+		cout << t << " ";
 	}
+
+	cout << "\n";
+	Point_2 lowest = get_lowest(pts);
+	plot.add_point(lowest.x(), lowest.y(), 4, "red", "red");
+
+	for (auto& q : hull) plot.add_point(q.x(), q.y(), 4, "red", "red");
+
+	std::vector<std::pair<double, double>> poly;
+	for (auto& q : j_hull) poly.push_back({q.x(), q.y()});
+	plot.add_polyline(poly, 2.5, "blue", true);
+	plot.write("debug.svg");
+	std::cout << "Wrote debug.svg\n";
 	
-	return 0;
+    // std::cout << output << "\n";
+    // Segment_2 s(p, q);
+    // std::cout << "Segment: " << s << "\n";
+	Point_2 p2(1, 2);
+	std::cout << p2.y() << "\n";
+	*/
+    return 0;
 }
 
