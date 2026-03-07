@@ -1,8 +1,13 @@
 # Configure
-cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
-
-or for performance testing:
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
 # Build
 cmake --build build
+
+# Usage Examples
+./build/benchmark jarvis 100000 irregular_hull
+./build/benchmark graham 100000 irregular_hull
+./build/benchmark jarvis 100000 uniform 
+./build/benchmark graham 100000 uniform
+./build/benchmark jarvis 100000 many_hull
+./build/benchmark graham 100000 many_hull
