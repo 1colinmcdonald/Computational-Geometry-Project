@@ -17,7 +17,6 @@
 #include <fstream>
 
 #include <vector>
-#include "points_and_segment.h"
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 using namespace std;
@@ -93,58 +92,6 @@ int main(int argc, char* argv[])
 
 	AlgoType algo;
 
-	/*
-    CGAL::IO::set_ascii_mode(std::cin);
-    CGAL::IO::set_ascii_mode(std::cout);
-    while (true)
-    {
-        try {
-            std::vector<Point_2> pts;
-            std::string line;
-
-            while (std::getline(std::cin, line))
-            {
-                if (line == "RUN")
-                {
-                    break;
-                }
-
-                // Try to parse line as a point (x y format)
-                std::istringstream iss(line);
-                double x, y;
-                if (iss >> x >> y)
-                {
-                    pts.push_back(Point_2(x, y));
-                }
-            }
-
-            // If we hit EOF without RUN, exit
-            if (std::cin.eof() && line != "RUN")
-            {
-                break;
-            }
-
-            if (!pts.empty())
-            {
-                std::vector<Point_2> hull;
-                hull = jarvis(pts);
-
-                for (const auto& p : hull)
-                {
-                    std::cout << p << "\n";
-                }
-            }
-            std::cout << "\n"<< std::flush;
-        } catch (const std::exception& e) {
-            std::cerr << "Error: " << e.what() << std::endl;
-            return 2;
-        } catch (...) {
-            std::cerr << "Unknown error occurred." << std::endl;
-            return 3;
-        }
-
-    }
-	*/
     // Take CLI arg for what algo to run
 	if (argc != 4)
 	{
@@ -184,81 +131,9 @@ int main(int argc, char* argv[])
 	plot_hull(pts, hull);
 
 
-    if (argc > 1)
-    {
-		cout << argv[1];
-		
-		/*
-        string algo = argv[1];
-        if (algo == "test")
-        {
-            test_same_hull();
-            return 0;
-        }
-        else if (algo == "graham")
-        {
-            convex_hull_algo = [](std::vector<Point_2> points)
-            {
-                std::vector<Point_2> result;
-                CGAL::ch_graham_andrew(points.begin(), points.end(),
-                                    std::back_inserter(result));
-                return result;
-            };
-        }
-        else if (algo == "jarvis")
-        {
-            convex_hull_algo = jarvis(pts);
-        }
-        else
-        {
-            std::cerr << "Unknown algorithm: " << algo << ". Use 'test', 'graham', or 'jarvis'." << std::endl;
-            return 1;
-        }
-		*/
-    }
-    else {
-        std::cerr << "No algorithm specified. Use 'test', 'graham', or 'jarvis' as an argument." << std::endl;
-        return 1;
-    }
 	// 1) Read all input points
 	SvgPlot plot;
 	for (auto& q : pts) plot.add_point(q.x(), q.y(), 3, "gray", "gray");
-
-	// 2) Compute convex hull points
-
-
-	/*
-	std::vector<Point_2> hull = test_cgal_graham(pts);
-	std::vector<Point_2> j_hull = jarvis(pts);
-	*/
-	/*
-	std::cout << total_len << std::endl;
-	*/
-
-	/* 
-	for (Point_2 t : j_hull)
-	{
-		cout << t << " ";
-	}
-
-	cout << "\n";
-	Point_2 lowest = get_lowest(pts);
-	plot.add_point(lowest.x(), lowest.y(), 4, "red", "red");
-
-	for (auto& q : hull) plot.add_point(q.x(), q.y(), 4, "red", "red");
-
-	std::vector<std::pair<double, double>> poly;
-	for (auto& q : j_hull) poly.push_back({q.x(), q.y()});
-	plot.add_polyline(poly, 2.5, "blue", true);
-	plot.write("debug.svg");
-	std::cout << "Wrote debug.svg\n";
-	
-    // std::cout << output << "\n";
-    // Segment_2 s(p, q);
-    // std::cout << "Segment: " << s << "\n";
-	Point_2 p2(1, 2);
-	std::cout << p2.y() << "\n";
-	*/
     return 0;
 }
 
@@ -345,28 +220,32 @@ OutputIt jarvis(InputIt first, InputIt last, OutputIt out)
 	return out;
 }
 
+template <class InputIt, class OutputIt>
+OutputIt graham(InputIt first, InputIt last, OutputIt out) {
+	/*
+	std::sort(points.begin(), points.end());
+	vector<Point_2> l_upper;
+	l_upper.push_back(points[0]);
+	l_upper.push_back(points[1]);
+	for (int i = 3; i < points.size(); i++)
+	{
+		l_upper.push_back(points[i]);
+				else if (orientation(hull.back(), q, *p) == CGAL::LEFT_TURN)
+		while (l_upper.size() > 2 &&
+				orientation(l_upper[l_upper.size() - 3],
+							l_upper[l_upper.size() - 2],
+							l_upper[l_upper.size() - 1]) != CGAL::RIGHT_TURN)
+		{
+
+		}
+	}
+	*/
+	std::sort(first, last);
+
+}
+
 // Tests
 #define IS_TRUE(x) { if (!(x)) std::cout << __FUNCTION__ << " failed on line " << __LINE__ << std::endl; }
-/*
-int test_jarvis(std::vector<Point_2> pts)
-{
-	volatile std::size_t sink = 0;
-	std::vector<long long> times;
-	for (int i = 0; i < 5; i++)
-	{
-		auto t1 = std::chrono::high_resolution_clock::now();
-		auto hull = jarvis(pts);
-		sink += hull.size();
-		auto t2 = std::chrono::high_resolution_clock::now();
-		auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-		times.push_back(ms);
-	}
-	std::sort(times.begin(), times.end());
-	cout << sink << endl;
-	long long median = times[times.size() / 2];
-	return median;
-}
-*/
 
 std::vector<Point_2> test_cgal_graham(std::vector<Point_2> pts)
 {

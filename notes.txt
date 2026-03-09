@@ -1,0 +1,1 @@
+When we build in release mode, our algorithms are about 157 times faster than they are in debug mode.

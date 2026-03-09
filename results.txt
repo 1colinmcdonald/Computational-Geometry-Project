@@ -3,3 +3,18 @@ CGAL's algorithm run 100 times in a for loop on random_points_10000_many_hull.tx
 So currently CGAL's algorithm is about 67 times faster than ours.
 
 After building in release mode, our Jarvis March algorithm took 439 ms. CGAL's algorithm took 43 ms
+
+./build/benchmark jarvis 100000 uniform
+Time: 5 ms
+
+./build/benchmark graham 100000 uniform
+Time: 7 ms
+
+./build/benchmark jarvis 100000 many_hull
+Time: 93 ms
+
+./build/benchmark graham 100000 many_hull
+Time: 6 ms
+
+These results make sense because the Jarvis algorithm's time complexity is O(nh). 
+So an input with many points on the hull will be much slower for Jarvis.
