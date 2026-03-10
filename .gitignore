@@ -51,3 +51,4 @@ runner/.pytest_cache
 runner/__pycache__
 
 *.svg
+.idea
