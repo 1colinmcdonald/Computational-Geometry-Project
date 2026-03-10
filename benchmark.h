@@ -15,7 +15,11 @@ Point_2 get_lowest(vector<Point_2> points);
 void plot_hull(std::vector<Point_2> points, std::vector<Point_2> hull);
 int test_jarvis(std::vector<Point_2> pts);
 vector<Point_2> jarvis_vector(const std::vector<Point_2> &points);
+
 template <class InputIt, class OutputIt>
 OutputIt jarvis(InputIt first, InputIt last, OutputIt out);
+
+template <class InputIt, class OutputIt>
+OutputIt graham(InputIt first, InputIt last, OutputIt out);
 
 #endif

@@ -106,6 +106,8 @@ int main(int argc, char* argv[])
 		algo = [](auto f, auto l, auto o) { return jarvis(f, l, o); };	
 	} else if (algo_arg == "graham") {
 		algo = [](auto f, auto l, auto o) { return CGAL::ch_graham_andrew(f, l, o); };
+	} else if (algo_arg == "my_graham") {
+		algo = [](auto f, auto l, auto o) { return graham(f, l, o); };
 	}
 	string input_filename = "input/" + distribution + "_" + num_points + ".txt";
 	std::vector<Point_2> hull;
@@ -141,36 +143,13 @@ void plot_hull(std::vector<Point_2> points, std::vector<Point_2> hull)
 {
 	SvgPlot plot;
 	std::vector<std::pair<double, double>> poly;
-	for (auto& q : points) plot.add_point(q.x(), q.y(), .01, "gray", "gray");
-	for (auto& q : hull) plot.add_point(q.x(), q.y(), .02, "red", "red");
+	for (auto& q : points) plot.add_point(q.x(), q.y(), 1, "gray", "gray");
+	for (auto& q : hull) plot.add_point(q.x(), q.y(), 2, "red", "red");
 	for (auto& q : hull) poly.push_back({q.x(), q.y()});
 	plot.add_polyline(poly, .02, "blue", true);
 	plot.write("debug.svg");
 	std::cout << "Wrote debug.svg\n";
 
-}
-
-vector<Point_2> graham(std::vector<Point_2>& points)
-{
-	/*
-	std::sort(points.begin(), points.end());
-	vector<Point_2> l_upper;
-	l_upper.push_back(points[0]);
-	l_upper.push_back(points[1]);
-	for (int i = 3; i < points.size(); i++)
-	{
-		l_upper.push_back(points[i]);
-				else if (orientation(hull.back(), q, *p) == CGAL::LEFT_TURN)
-		while (l_upper.size() > 2 && 
-				orientation(l_upper[l_upper.size() - 3], 
-							l_upper[l_upper.size() - 2], 
-							l_upper[l_upper.size() - 1]) != CGAL::RIGHT_TURN)
-		{
-			
-		}
-	}
-	*/
-    return points;
 }
 
 vector<Point_2> jarvis_vector(const std::vector<Point_2>& points)
@@ -222,26 +201,27 @@ OutputIt jarvis(InputIt first, InputIt last, OutputIt out)
 
 template <class InputIt, class OutputIt>
 OutputIt graham(InputIt first, InputIt last, OutputIt out) {
-	/*
+	std::vector<Point_2> points(first, last);
 	std::sort(points.begin(), points.end());
 	vector<Point_2> l_upper;
+	
 	l_upper.push_back(points[0]);
 	l_upper.push_back(points[1]);
 	for (int i = 3; i < points.size(); i++)
 	{
-		l_upper.push_back(points[i]);
-				else if (orientation(hull.back(), q, *p) == CGAL::LEFT_TURN)
-		while (l_upper.size() > 2 &&
-				orientation(l_upper[l_upper.size() - 3],
-							l_upper[l_upper.size() - 2],
-							l_upper[l_upper.size() - 1]) != CGAL::RIGHT_TURN)
-		{
-
+		while (l_upper.size() > 1 &&
+					orientation(l_upper[l_upper.size() - 2], 
+					l_upper[l_upper.size() - 1], 
+					points[i]) != CGAL::RIGHT_TURN) {
+			l_upper.pop_back();
 		}
+		l_upper.push_back(points[i]);
 	}
-	*/
-	std::sort(first, last);
 
+	for (auto it = l_upper.begin(); it != l_upper.end(); ++it) {
+		*out++ = *it;
+	}
+	return out;
 }
 
 // Tests

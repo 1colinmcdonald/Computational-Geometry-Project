@@ -11,3 +11,9 @@ cmake --build build
 ./build/benchmark graham 100000 uniform
 ./build/benchmark jarvis 100000 many_hull
 ./build/benchmark graham 100000 many_hull
+
+# Currently only calculates the upper hull
+./build/benchmark my_graham 63 random_points
+
+# To view the hull:
+open debug.svg
