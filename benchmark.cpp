@@ -1,10 +1,12 @@
 #include <iostream>
 #include <list>
 #include <algorithm> // std::min_element
+#include <random>
 
 #include <vector>
 #include "svg_plot.h"
 #include "benchmark.h"
+
 
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
@@ -26,6 +28,9 @@ typedef Kernel::Point_2 Point_2;
 typedef Kernel::Segment_2 Segment_2;
 typedef CGAL::Polygon_2<K> Polygon_2;
 
+std::random_device rd;        // Seed source
+std::mt19937 gen(rd()); 
+
 bool y_comp(Point_2 a, Point_2 b)
 {
 	if (a.y() < b.y())
@@ -34,7 +39,7 @@ bool y_comp(Point_2 a, Point_2 b)
 	}
 	if (a.y() == b.y())
 	{
-		return a.x() <= b.x();
+		return a.x() < b.x();
 	}
 	return false;
 }
@@ -50,6 +55,33 @@ bool y_neg_x_comp(Point_2 a, Point_2 b)
 		return a.x() > b.x();
 	}
 	return false;
+}
+
+
+bool x_comp(Point_2 a, Point_2 b)
+{
+	if (a.x() < b.x())
+	{
+		return true;
+	}
+	if (a.x() == b.x())
+	{
+		return a.y() < b.y();
+	}
+	return false;
+}
+
+bool x_neg_comp(Point_2 a, Point_2 b)
+{
+    if (a.x() < b.x())
+    {
+        return true;
+    }
+    if (a.x() == b.x())
+    {
+        return a.y() > b.y();
+    }
+    return false;
 }
 
 function<bool(Point_2, Point_2)> make_upper_hull_comp(Point_2 highest)
@@ -83,6 +115,16 @@ Point_2 get_lowest(vector<Point_2> points)
 	return *min_element(points.begin(), points.end(), y_comp);
 }
 
+Point_2 get_highest_by_x(const vector<Point_2> &points)
+{
+	return *max_element(points.begin(), points.end(), x_neg_comp);
+}
+
+Point_2 get_lowest_by_x(vector<Point_2> points)
+{
+	return *min_element(points.begin(), points.end(), x_comp);
+}
+
 bool same_hull(vector<Point_2> hull1, vector<Point_2> hull2)
 {
 	if (hull1.size() != hull2.size())
@@ -108,12 +150,14 @@ bool same_hull(vector<Point_2> hull1, vector<Point_2> hull2)
 	return true;
 }
 
+
 // Tests
 #define IS_TRUE(x)                                                                    \
 	{                                                                                 \
 		if (!(x))                                                                     \
 			std::cout << __FUNCTION__ << " failed on line " << __LINE__ << std::endl; \
 	}
+
 
 void test_same_hull()
 {
@@ -160,6 +204,12 @@ int main(int argc, char *argv[])
 		algo = [](auto f, auto l, auto o)
 		{ return graham(f, l, o); };
 	}
+    else if (algo_arg == "ray_shooting_quickhull")
+    {
+        algo = [](auto f, auto l, auto o)
+        { return ray_shooting_quickhull(f, l, o); };
+    }
+
 	string input_filename = "input/" + distribution + "_" + num_points + ".txt";
 	std::vector<Point_2> hull;
 	std::vector<Point_2> pts;
@@ -228,7 +278,7 @@ vector<Point_2> jarvis_vector(const std::vector<Point_2> &points)
 				{
 					p = q;
 				}
-				else if (orientation(hull.back(), q, *p) == CGAL::COLLINEAR and squared_distance(q, hull.back()) > squared_distance(*p, hull.back()))
+				else if (orientation(hull.back(), q, *p) == CGAL::COLLINEAR && squared_distance(q, hull.back()) > squared_distance(*p, hull.back()))
 				{
 					p = q;
 				}
@@ -296,9 +346,186 @@ OutputIt graham(InputIt first, InputIt last, OutputIt out)
 	return out;
 }
 
-// Tests
-#define IS_TRUE(x)                                                                    \
-	{                                                                                 \
-		if (!(x))                                                                     \
-			std::cout << __FUNCTION__ << " failed on line " << __LINE__ << std::endl; \
+
+template <class InputIt, class OutputIt>
+OutputIt ray_shooting_quickhull(InputIt first, InputIt last, OutputIt out)
+{	
+    std::vector<Point_2> points(first, last);
+    Point_2 p = get_lowest_by_x(points);
+    Point_2 r = get_highest_by_x(points);
+
+    if (p == r) {
+        // All points are the same
+        *out++ = p;
+        return out;
+    }
+
+    vector<Point_2> above_set;
+    vector<Point_2> below_set;
+
+    for (const auto& x : points) {
+        if (x == p || x == r) continue;
+        auto o = CGAL::orientation(p, r, x);
+        if (o == CGAL::LEFT_TURN) above_set.push_back(x);
+        else if (o == CGAL::RIGHT_TURN) below_set.push_back(x);
+    }
+
+    vector<Point_2> hull_above = ray_shooting_quickhull_recurse(above_set, p, r);
+    vector<Point_2> hull_below = ray_shooting_quickhull_recurse(below_set, r, p);
+
+    *out++ = p;
+    out = std::copy(hull_above.begin(), hull_above.end(), out);
+    *out++ = r;
+    out = std::copy(hull_below.begin(), hull_below.end(), out);
+    
+    return out;
+}
+
+vector <Point_2> ray_shooting_quickhull_recurse(std::vector<Point_2> points, Point_2 a, Point_2 b)
+{   
+    if (points.empty()) {
+        return {};
+    }
+    if (points.size() == 1) {
+        return { points[0] };
+    }
+    
+    std::uniform_int_distribution<size_t> dist(0, points.size() - 1);
+    Point_2 q = points[dist(gen)];
+    
+    std::pair<Point_2, Point_2> result = ray_shoot(points, q, a, b);
+    Point_2 s = result.first;
+    Point_2 t = result.second;
+    
+    // Prune points in quad!
+    vector<Point_2> points_above_as;
+    vector<Point_2> points_above_tb;
+    for (const auto& pi : points) {
+        // Point in left triangle
+        if (CGAL::orientation(a, s, pi) == CGAL::LEFT_TURN) {
+            points_above_as.push_back(pi);
+        }
+        
+        // Point in right triangle
+        else if (CGAL::orientation(t, b, pi) == CGAL::LEFT_TURN) {
+            points_above_tb.push_back(pi);
+        }
+    }
+
+
+    vector<Point_2> left_hull = ray_shooting_quickhull_recurse(points_above_as, a, s);
+    vector<Point_2> right_hull = ray_shooting_quickhull_recurse(points_above_tb, t, b);
+
+    vector<Point_2> hull;
+    hull.insert(hull.end(), left_hull.begin(), left_hull.end());
+    hull.push_back(s);
+    if (s != t) {
+        hull.push_back(t);
+    }
+    hull.insert(hull.end(), right_hull.begin(), right_hull.end());
+
+    return hull;
+}
+
+
+std::pair<Point_2, Point_2> ray_shoot(std::vector<Point_2> points, Point_2 q, Point_2 p, Point_2 r)
+{
+    Point_2 s, t;
+    s = q;
+    t = q;
+
+    std::vector<Point_2> Sl;
+    std::vector<Point_2> Sr;
+    Sl.push_back(q);
+    Sr.push_back(q);
+
+    std::shuffle(points.begin(), points.end(), gen);\
+    double dx = r.x() - p.x();
+    double dy = r.y() - p.y();
+    Point_2 q_parallel(q.x() + dx, q.y() + dy);
+    Point_2 q_up(q.x() - dy, q.y() + dx);
+
+    for (const auto& pi : points) {
+        bool is_above;
+
+        if (s == t) {
+            is_above = (CGAL::orientation(q, q_parallel, pi) == CGAL::LEFT_TURN);
+        } else {
+            is_above = (CGAL::orientation(s, t, pi) == CGAL::LEFT_TURN);
+        }
+
+        if (is_above) {
+
+           if (CGAL::orientation(q, q_up, pi) == CGAL::LEFT_TURN) {
+            // in Sl
+            Point_2 smallest_slope_ti;
+            bool first = true;
+            for (const auto& tprime : Sr) {
+                // Slope of pi t'
+
+                if (first) {
+                    smallest_slope_ti = tprime;
+                    first = false;
+                    continue;
+                }
+
+                // Check smallest_slope_ti vs the new candidate
+                auto orient = orientation(pi, smallest_slope_ti, tprime);
+
+                if (orient == CGAL::LEFT_TURN) {
+                    smallest_slope_ti = tprime;
+                }
+            }
+
+            t = smallest_slope_ti;
+            s = pi;
+
+           } else {
+            // in Sr
+            Point_2 smallest_slope_si;
+            bool first = true;
+            for (const auto& tprime : Sl) {
+                // Slope of pi t'
+
+                if (first) {
+                    smallest_slope_si = tprime;
+                    first = false;
+                    continue;
+                }
+
+                // Check smallest_slope_si vs the new candidate
+                auto orient = orientation(pi, smallest_slope_si, tprime);
+
+                if (orient == CGAL::LEFT_TURN) {
+                    smallest_slope_si = tprime;
+                }
+            }
+
+            s = smallest_slope_si;
+            t = pi;
+           }
+        }
+
+        if (CGAL::orientation(q, q_up, pi) == CGAL::LEFT_TURN) {
+            Sl.push_back(pi);
+        }
+        else if (pi != q && CGAL::orientation(q, q_up, pi) != CGAL::LEFT_TURN) {
+            Sr.push_back(pi);
+        }
+    }
+
+    return {s, t};
+}
+
+std::vector<Point_2> test_cgal_graham(std::vector<Point_2> pts)
+{
+	volatile std::size_t sink = 0;
+	std::vector<Point_2> hull;
+	for (int i = 0; i < 100; i++)
+	{
+		hull.clear();
+		CGAL::ch_graham_andrew(pts.begin(), pts.end(), std::back_inserter(hull));
+		sink += hull.size();
 	}
+	return hull;
+}
