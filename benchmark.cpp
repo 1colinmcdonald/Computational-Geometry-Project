@@ -265,7 +265,7 @@ OutputIt graham(InputIt first, InputIt last, OutputIt out)
 
 	l_upper.push_back(points[0]);
 	l_upper.push_back(points[1]);
-	for (int i = 3; i < points.size(); i++)
+	for (int i = 2; i < points.size(); i++)
 	{
 		while (l_upper.size() > 1 &&
 			   orientation(l_upper[l_upper.size() - 2],
@@ -302,16 +302,3 @@ OutputIt graham(InputIt first, InputIt last, OutputIt out)
 		if (!(x))                                                                     \
 			std::cout << __FUNCTION__ << " failed on line " << __LINE__ << std::endl; \
 	}
-
-std::vector<Point_2> test_cgal_graham(std::vector<Point_2> pts)
-{
-	volatile std::size_t sink = 0;
-	std::vector<Point_2> hull;
-	for (int i = 0; i < 100; i++)
-	{
-		hull.clear();
-		CGAL::ch_graham_andrew(pts.begin(), pts.end(), std::back_inserter(hull));
-		sink += hull.size();
-	}
-	return hull;
-}
