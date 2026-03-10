@@ -149,37 +149,80 @@ vector <Point_2> ray_shooting_quickhull_recurse(std::vector<Point_2> points, Poi
 
 }
 
+bool is_above_line(Point_2 p, Point_2 a, Point_2 b)
+{
+    if (a.x() > b.x())
+    {
+        return orientation(b, a, p) == CGAL::LEFT_TURN;
+    }
+    else
+    {
+        return orientation(a, b, p) == CGAL::LEFT_TURN;
+    }
+}
+
 void ray_shoot(std::vector<Point_2> points, Point_2 q, Point_2 p, Point_2 r)
 {
     Point_2 s, t;
     s = q;
     t = q;
 
+    std::vector<Point_2> Sl;
+    std::vector<Point_2> Sr;
+    Sl.push_back(q);
+    Sr.push_back(q);
+
     std::shuffle(points.begin(), points.end(), engine);
 
-    // Project q onto pr
-    Point_2 pr = r - p;
-    Point_2 pq = q - p;
-    double t_proj = (pq.x() * pr.x() + pq.y() * pr.y()) / (pr.x() * pr.x() + pr.y() * pr.y());
-    Point_2 q_proj = Point_2(p.x() + t_proj * pr.x(), p.y() + t_proj * pr.y());
-
-
     for (const auto& pi : points) {
-        if ((s == t) || orientation(s, t, pi) == CGAL::LEFT_TURN) {
-            // Above the line
-            // Check side to see if q is on the left halfplane defined by perpendicular ray q away from line pr
-            if (orientation(q_proj, q, pi) == CGAL::LEFT_TURN) {
-                // q is on the left halfplane
-                
-                // TODO: Find point t' in Sr such that pit' minimizes the angle with the x-axis.
+        bool is_above;
+        if (s == t) {
+            // Check if pi is above the line pr
+            is_above = pi.y() > s.y()
+        } else {
+            // Check if pi is above the line st
+            is_above = is_above_line(pi, s, t);
+        }
+
+        if (is_above) {
+           if (pi.x() < q.x()) {
+            // in Sl
+            double smallest_slope = numeric_limits<double>::infinity();
+            double smallest_slope_ti = 0;
+            for (const auto& tprime : Sl) {
+                // Slope of pi t'
+                double slope_pi_tprime = (tprime.y() - pi.y()) / (tprime.x() - pi.x());
+                if (abs(slope_pi_tprime) < smallest_slope) {
+                    smallest_slope = abs(slope_pi_tprime);
+                }
             }
 
-        } else {
-            // Below the line
+            t = smallest_slope_ti;
+
+
+           } else {
+            // in Sr
+            double smallest_slope = numeric_limits<double>::infinity();
+            double smallest_slope_si = 0;
+            for (const auto& tprime : Sr) {
+                // Slope of pi t'
+                double slope_pi_tprime = (tprime.y() - pi.y()) / (tprime.x() - pi.x());
+                if (abs(slope_pi_tprime) < smallest_slope) {
+                    smallest_slope_si = abs(slope_pi_tprime);
+                }
+            }
+
+            t = smallest_slope_si;
+           }
+        }
+
+        if (pi.x() < q.x()) {
+            Sl.push_back(pi);
+        }
+        if (pi.x() > q.x()) {
+            Sr.push_back(pi);
         }
     }
-
-
 }
 
 
