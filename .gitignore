@@ -41,6 +41,7 @@
 *.dwo
 
 build
+build-release
 .vscode
 
 bin/
@@ -48,3 +49,6 @@ bin/
 runner/.hypothesis
 runner/.pytest_cache
 runner/__pycache__
+
+*.svg
+.idea
