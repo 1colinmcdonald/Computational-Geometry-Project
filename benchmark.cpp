@@ -386,9 +386,6 @@ vector <Point_2> ray_shooting_quickhull_recurse(std::vector<Point_2> points, Poi
     if (points.empty()) {
         return {};
     }
-    if (points.size() == 1) {
-        return { points[0] };
-    }
     
     std::uniform_int_distribution<size_t> dist(0, points.size() - 1);
     Point_2 q = points[dist(gen)];
@@ -397,15 +394,19 @@ vector <Point_2> ray_shooting_quickhull_recurse(std::vector<Point_2> points, Poi
     Point_2 s = result.first;
     Point_2 t = result.second;
     
-    // Prune points in quad!
+    // Prune points in polygon!
     vector<Point_2> points_above_as;
     vector<Point_2> points_above_tb;
+
     for (const auto& pi : points) {
+        // Skip points that we already know about.
+        if (pi == s || pi == t || pi == a || pi == b) continue;
+
         // Point in left triangle
         if (CGAL::orientation(a, s, pi) == CGAL::LEFT_TURN) {
             points_above_as.push_back(pi);
-        }
-        
+        } 
+
         // Point in right triangle
         else if (CGAL::orientation(t, b, pi) == CGAL::LEFT_TURN) {
             points_above_tb.push_back(pi);
@@ -418,10 +419,15 @@ vector <Point_2> ray_shooting_quickhull_recurse(std::vector<Point_2> points, Poi
 
     vector<Point_2> hull;
     hull.insert(hull.end(), left_hull.begin(), left_hull.end());
-    hull.push_back(s);
-    if (s != t) {
+
+    // Ensure we don't add duplicates!
+    if (s != a && s != b) {
+        hull.push_back(s);
+    }
+    if (t != s && t != a && t != b) {
         hull.push_back(t);
     }
+
     hull.insert(hull.end(), right_hull.begin(), right_hull.end());
 
     return hull;
@@ -429,7 +435,11 @@ vector <Point_2> ray_shooting_quickhull_recurse(std::vector<Point_2> points, Poi
 
 
 std::pair<Point_2, Point_2> ray_shoot(std::vector<Point_2> points, Point_2 q, Point_2 p, Point_2 r)
-{
+{   
+    // Ensure we give it the boundaries
+    points.push_back(p);
+    points.push_back(r);
+
     Point_2 s, t;
     s = q;
     t = q;
@@ -458,17 +468,8 @@ std::pair<Point_2, Point_2> ray_shoot(std::vector<Point_2> points, Point_2 q, Po
 
            if (CGAL::orientation(q, q_up, pi) == CGAL::LEFT_TURN) {
             // in Sl
-            Point_2 smallest_slope_ti;
-            bool first = true;
+            Point_2 smallest_slope_ti = q;
             for (const auto& tprime : Sr) {
-                // Slope of pi t'
-
-                if (first) {
-                    smallest_slope_ti = tprime;
-                    first = false;
-                    continue;
-                }
-
                 // Check smallest_slope_ti vs the new candidate
                 auto orient = orientation(pi, smallest_slope_ti, tprime);
 
@@ -482,22 +483,13 @@ std::pair<Point_2, Point_2> ray_shoot(std::vector<Point_2> points, Point_2 q, Po
 
            } else {
             // in Sr
-            Point_2 smallest_slope_si;
-            bool first = true;
-            for (const auto& tprime : Sl) {
-                // Slope of pi t'
-
-                if (first) {
-                    smallest_slope_si = tprime;
-                    first = false;
-                    continue;
-                }
-
+            Point_2 smallest_slope_si = q;
+            for (const auto& sprime : Sl) {
                 // Check smallest_slope_si vs the new candidate
-                auto orient = orientation(pi, smallest_slope_si, tprime);
+                auto orient = orientation(smallest_slope_si, pi, sprime);
 
                 if (orient == CGAL::LEFT_TURN) {
-                    smallest_slope_si = tprime;
+                    smallest_slope_si = sprime;
                 }
             }
 
