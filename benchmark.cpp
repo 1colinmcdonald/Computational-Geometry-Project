@@ -32,6 +32,9 @@ typedef Kernel::Point_2 Point_2;
 typedef Kernel::Segment_2 Segment_2;
 typedef CGAL::Polygon_2<K> Polygon_2;
 
+constexpr int LL = 1;
+constexpr int RR = 3;
+
 std::random_device rd; // Seed source
 std::mt19937 gen(rd());
 
@@ -249,17 +252,24 @@ void plot_hull(std::vector<Point_2> points, std::vector<Point_2> hull) {
         cout << "(" << p << ")";
     }
     cout << "" << endl;
-    Point_2 q(-20, 20);
-    const auto t_ll_it = get_ll_tangent_point(hull.begin(),hull.end(), hull.begin(), hull.end(), q);
+    Point_2 q(200,200);
+    const auto t_ll_it = get_tangent_point(hull.begin(),hull.end(),
+                                                                        hull.begin(), hull.end(), q, LL);
     const auto t_ll = *t_ll_it;
+    const auto t_rr_it = get_tangent_point(hull.begin(),hull.end(),
+                                                                        hull.begin(), hull.end(), q, RR);
+    const auto t_rr = *t_rr_it;
     plot.add_point(q.x(), q.y(), 5, "green", "green");
     plot.add_point(t_ll.x(), t_ll.y(), 5, "orange", "orange");
-    // plot.add_point(t_ll.x(), t_ll.y(), 5, "orange", "orange");
+    plot.add_point(t_rr.x(), t_rr.y(), 5, "orange", "orange");
     vector<pair<double, double>> t1;
     vector<pair<double, double>> t2;
     t1.push_back({q.x(), q.y()});
     t1.push_back({t_ll.x(), t_ll.y()});
+    t2.push_back({q.x(), q.y()});
+    t2.push_back({t_rr.x(), t_rr.y()});
     plot.add_polyline(t1, 2, "purple", true);
+    plot.add_polyline(t2, 2, "purple", true);
     plot.add_polyline(poly, 2, "blue", true);
     plot.write("debug.svg");
     std::cout << "Wrote debug.svg\n";
@@ -571,38 +581,28 @@ pair<Point_2, Point_2> get_tangent_points_linear(RandomIt first, RandomIt last, 
 }
 
 template<class RandomIt>
-RandomIt get_ll_tangent_point(RandomIt beginning, RandomIt end, RandomIt l, RandomIt r, Point_2 p) {
-    const Point_2 first_p = *l;
-    const Point_2 last_p = *(r - 1);
-    cout << "first_p: (" << first_p << ")" << endl;
-    cout << "last_p: (" << last_p << ")" << endl;
-    cout << "first index: " << l - beginning << endl;
-    cout << "last index: " << r - beginning << endl;
+RandomIt get_tangent_point(RandomIt beginning, RandomIt end, RandomIt l, RandomIt r, Point_2 p, int target_orient) {
     if (l > r) {
-        cout << "Couldn't find it!" << endl;
         return r;
     }
     RandomIt mid = l + (r - l) / 2;
+
     const int mid_orient_id = get_orient_id(beginning, end, mid, p);
     const int first_orient_id = get_orient_id(beginning, end, l, p);
     const int last_orient_id = get_orient_id(beginning, end, r - 1, p);
-    Point_2 q = *mid;
-    cout << "Checking: " << q << endl;
-    cout << "mid orient: " << mid_orient_id << endl;
-    if (mid_orient_id == 1) {
-        cout << "Yep, " << q << " is the one!" << endl;
+    if (mid_orient_id == target_orient) {
         return mid;
     }
     if (first_orient_id <= mid_orient_id) {
-        if (first_orient_id <= 1 && 1 < mid_orient_id) {
-            return get_ll_tangent_point(beginning, end, l, mid, p);
+        if (first_orient_id <= target_orient && target_orient < mid_orient_id) {
+            return get_tangent_point(beginning, end, l, mid, p, target_orient);
         }
-        return get_ll_tangent_point(beginning, end, mid + 1, r, p);
+        return get_tangent_point(beginning, end, mid + 1, r, p, target_orient);
     }
-    if (mid_orient_id < 1 && 1 <= last_orient_id) {
-        return get_ll_tangent_point(beginning, end, mid + 1, r, p);
+    if (mid_orient_id < target_orient && target_orient <= last_orient_id) {
+        return get_tangent_point(beginning, end, mid + 1, r, p, target_orient);
     }
-    return get_ll_tangent_point(beginning,end, l, mid, p);
+    return get_tangent_point(beginning,end, l, mid, p, target_orient);
 }
 
 template<class RandomIt>

@@ -70,5 +70,5 @@ template<class RandomIt>
 int get_orient_id(RandomIt beginning, RandomIt end, RandomIt on_hull, Point_2 p);
 
 template<class RandomIt>
-RandomIt get_ll_tangent_point(RandomIt beginning, RandomIt end, RandomIt l, RandomIt r, Point_2 p);
+RandomIt get_tangent_point(RandomIt beginning, RandomIt end, RandomIt l, RandomIt r, Point_2 p, int target_orient);
 #endif
