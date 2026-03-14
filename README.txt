@@ -1,5 +1,9 @@
 # Configure
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+or
+
+To enable assert statements:
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 
 # Build
 cmake --build build

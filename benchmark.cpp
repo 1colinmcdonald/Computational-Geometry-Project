@@ -2,6 +2,7 @@
 #include <list>
 #include <algorithm> // std::min_element
 #include <random>
+#include <set>
 
 #include <vector>
 #include "svg_plot.h"
@@ -21,9 +22,8 @@
 #include <chrono>
 #include <functional>
 #include <fstream>
-
-#include <vector>
-
+#include <cassert>
+#include <iterator>
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 using namespace std;
 
@@ -95,8 +95,9 @@ Point_2 get_highest(const vector<Point_2> &points) {
     return *max_element(points.begin(), points.end(), y_neg_x_comp);
 }
 
-Point_2 get_lowest(vector<Point_2> points) {
-    return *min_element(points.begin(), points.end(), y_comp);
+template<class InputIt>
+Point_2 get_lowest(InputIt first, InputIt last) {
+    return *min_element(first, last, y_comp);
 }
 
 Point_2 get_highest_by_x(const vector<Point_2> &points) {
@@ -105,6 +106,12 @@ Point_2 get_highest_by_x(const vector<Point_2> &points) {
 
 Point_2 get_lowest_by_x(vector<Point_2> points) {
     return *min_element(points.begin(), points.end(), x_comp);
+}
+
+bool same_hull_simple(vector<Point_2> hull1, vector<Point_2> hull2) {
+    set<Point_2> set1(hull1.begin(), hull1.end());
+    set<Point_2> set2(hull2.begin(), hull2.end());
+    return set1 == set2;
 }
 
 bool same_hull(vector<Point_2> hull1, vector<Point_2> hull2) {
@@ -156,6 +163,10 @@ int main(int argc, char *argv[]) {
 
     AlgoType algo;
 
+    vector<int> vals = {8, 4, 5, 9};
+    int i = bin_search(vals.begin(), vals.end(), -5);
+    cout << i << endl;
+
     // Take CLI arg for what algo to run
     if (argc != 4) {
         std::cerr << "Must specify algorithm, number of points, and point distribution" << std::endl;
@@ -190,7 +201,6 @@ int main(int argc, char *argv[]) {
             return CGAL::ch_melkman(f, l, o);
         };
     }
-
     string input_filename = "input/" + distribution + "_" + num_points + ".txt";
     std::vector<Point_2> hull;
     std::vector<Point_2> pts;
@@ -204,6 +214,8 @@ int main(int argc, char *argv[]) {
         pts.emplace_back(x, y);
     }
 
+    vector<Point_2> cond;
+    // conditional_hull(pts.begin(), pts.end(), 2, cond);
     auto t1 = std::chrono::high_resolution_clock::now();
     algo(pts.begin(), pts.end(), std::back_inserter(hull));
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -212,16 +224,20 @@ int main(int argc, char *argv[]) {
             << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
             << " ms\n";
     plot_hull(pts, hull);
-
-    // 1) Read all input points
-    SvgPlot plot;
-    for (auto &q: pts)
-        plot.add_point(q.x(), q.y(), 3, "gray", "gray");
+    vector<Point_2> correct_hull;
+    CGAL::ch_bykat(pts.begin(), pts.end(), std::back_inserter(correct_hull));
+    assert((same_hull_simple(hull, correct_hull)));
+    if (same_hull_simple(hull, correct_hull)) {
+        cout << "Correct hull found" << endl;
+    } else {
+        cout << "Incorrect hull found" << endl;
+    }
     return 0;
 }
 
 void plot_hull(std::vector<Point_2> points, std::vector<Point_2> hull) {
     SvgPlot plot;
+
     std::vector<std::pair<double, double> > poly;
     for (auto &q: points)
         plot.add_point(q.x(), q.y(), 10, "gray", "gray");
@@ -229,13 +245,28 @@ void plot_hull(std::vector<Point_2> points, std::vector<Point_2> hull) {
         plot.add_point(q.x(), q.y(), 20, "red", "red");
     for (auto &q: hull)
         poly.push_back({q.x(), q.y()});
+    for (auto& p : hull) {
+        cout << "(" << p << ")";
+    }
+    cout << "" << endl;
+    Point_2 q(-20, 20);
+    const auto t_ll_it = get_ll_tangent_point(hull.begin(),hull.end(), hull.begin(), hull.end(), q);
+    const auto t_ll = *t_ll_it;
+    plot.add_point(q.x(), q.y(), 5, "green", "green");
+    plot.add_point(t_ll.x(), t_ll.y(), 5, "orange", "orange");
+    // plot.add_point(t_ll.x(), t_ll.y(), 5, "orange", "orange");
+    vector<pair<double, double>> t1;
+    vector<pair<double, double>> t2;
+    t1.push_back({q.x(), q.y()});
+    t1.push_back({t_ll.x(), t_ll.y()});
+    plot.add_polyline(t1, 2, "purple", true);
     plot.add_polyline(poly, 2, "blue", true);
     plot.write("debug.svg");
     std::cout << "Wrote debug.svg\n";
 }
 
 vector<Point_2> jarvis_vector(const std::vector<Point_2> &points) {
-    Point_2 v1 = get_lowest(points);
+    Point_2 v1 = get_lowest(points.begin(), points.end());
     Point_2 v0(-numeric_limits<double>::infinity(), v1.y());
     vector<Point_2> hull;
     hull.push_back(v0);
@@ -465,6 +496,217 @@ std::pair<Point_2, Point_2> ray_shoot(std::vector<Point_2> points, Point_2 q, Po
 
     return {s, t};
 }
+
+template <typename Matrix>
+void print_2d(const Matrix& m) {
+    for (const auto& row : m) {
+        for (const auto& x : row) {
+            cout << x << " ";
+        }
+        cout << "\n";
+    }
+}
+
+template<class RandomIt>
+int bin_search(RandomIt first, RandomIt last, int target) {
+    RandomIt l = first;
+    RandomIt r = last - 1;
+    while (l <= r) {
+        RandomIt mid = l + (r - l) / 2;
+        if (*mid == target) {
+            return mid - first;
+        }
+        if (*mid < target) {
+            l = mid + 1;
+        }
+        else {
+            r = mid - 1;
+        }
+    }
+    return -1;
+}
+
+template<class RandomIt>
+pair<Point_2, Point_2> get_neighbors(RandomIt first, RandomIt last, RandomIt curr) {
+    pair<Point_2, Point_2> result;
+    if (curr == first) {
+        result.first = *(last - 1);
+    } else {
+        result.first = *(first + (curr - first - 1));
+    }
+    if (curr == last - 1) {
+        result.second = *(first);
+    } else {
+        result.second = *(first + (curr - first + 1));
+    }
+    return result;
+}
+
+template<class RandomIt>
+pair<Point_2, Point_2> get_tangent_points_linear(RandomIt first, RandomIt last, Point_2 p) {
+    pair<Point_2, Point_2> result;
+    RandomIt curr = first;
+    Point_2 prev;
+    Point_2 next;
+    while (curr != last) {
+        if (pair<Point_2, Point_2> neighbors = get_neighbors(first, last, curr);
+            orientation(p, *curr, neighbors.first) == CGAL::LEFT_TURN
+            and orientation(p, *curr, neighbors.second) == CGAL::LEFT_TURN) {
+            result.first = *curr;
+            break;
+        }
+        curr += 1;
+    }
+    curr = first;
+    while (curr != last) {
+        if (pair<Point_2, Point_2> neighbors = get_neighbors(first, last, curr);
+            orientation(p, *curr, neighbors.first) == CGAL::RIGHT_TURN
+            and orientation(p, *curr, neighbors.second) == CGAL::RIGHT_TURN) {
+            result.second = *curr;
+            break;
+        }
+        curr += 1;
+    }
+    return result;
+}
+
+template<class RandomIt>
+RandomIt get_ll_tangent_point(RandomIt beginning, RandomIt end, RandomIt l, RandomIt r, Point_2 p) {
+    const Point_2 first_p = *l;
+    const Point_2 last_p = *(r - 1);
+    cout << "first_p: (" << first_p << ")" << endl;
+    cout << "last_p: (" << last_p << ")" << endl;
+    cout << "first index: " << l - beginning << endl;
+    cout << "last index: " << r - beginning << endl;
+    if (l > r) {
+        cout << "Couldn't find it!" << endl;
+        return r;
+    }
+    RandomIt mid = l + (r - l) / 2;
+    const int mid_orient_id = get_orient_id(beginning, end, mid, p);
+    const int first_orient_id = get_orient_id(beginning, end, l, p);
+    const int last_orient_id = get_orient_id(beginning, end, r - 1, p);
+    Point_2 q = *mid;
+    cout << "Checking: " << q << endl;
+    cout << "mid orient: " << mid_orient_id << endl;
+    if (mid_orient_id == 1) {
+        cout << "Yep, " << q << " is the one!" << endl;
+        return mid;
+    }
+    if (first_orient_id <= mid_orient_id) {
+        if (first_orient_id <= 1 && 1 < mid_orient_id) {
+            return get_ll_tangent_point(beginning, end, l, mid, p);
+        }
+        return get_ll_tangent_point(beginning, end, mid + 1, r, p);
+    }
+    if (mid_orient_id < 1 && 1 <= last_orient_id) {
+        return get_ll_tangent_point(beginning, end, mid + 1, r, p);
+    }
+    return get_ll_tangent_point(beginning,end, l, mid, p);
+}
+
+template<class RandomIt>
+int get_orient_id(RandomIt beginning, RandomIt end, RandomIt on_hull, Point_2 p) {
+    pair<Point_2, Point_2> neighbors = get_neighbors(beginning, end, on_hull);
+    cout << "prev neighbor" << neighbors.first << endl;
+    cout << "next neighbor" << neighbors.second << endl;
+    const int op = orientation(p, *on_hull, neighbors.first);
+    const int on = orientation(p, *on_hull, neighbors.second);
+    cout << "op: " << op << endl;
+    cout << "on: " << on << endl;
+    if (op == CGAL::LEFT_TURN) {
+        if (on == CGAL::RIGHT_TURN) {
+            return 0;
+        }
+        return 1;
+    }
+    if (on == CGAL::LEFT_TURN) {
+        return 2;
+    }
+    return 3;
+}
+
+template<class RandomIt>
+pair<Point_2, Point_2> get_tangent_points(RandomIt first, RandomIt last, Point_2 p) {
+    pair<Point_2, Point_2> result;
+    RandomIt l = first;
+    RandomIt r = last - 1;
+    int n = last - first;
+    while (l <= r) {
+        RandomIt mid = l + (r - l) / 2;
+        Point_2 q = *mid;
+        pair<Point_2, Point_2> neighbors = get_neighbors(first, last, mid);
+        if (orientation(p, q, neighbors.first) == CGAL::LEFT_TURN) {
+            r = mid - 1;
+        }
+        else if (orientation(p, q, neighbors.second) == CGAL::LEFT_TURN) {
+            l = mid + 1;
+        } else {
+            result.first = q;
+            break;
+        }
+    }
+    cout << "done getting the first" << endl;
+    l = first;
+    r = last - 1;
+    while (l <= r) {
+        RandomIt mid = l + (r - l) / 2;
+        cout << mid - first << endl;
+        Point_2 q = *mid;
+        Point_2 prev = *(first + (mid - first - 1) % n);
+        Point_2 next = *(first + (mid - first + 1) % n);
+        cout << "q: " << q << endl;
+        cout << "prev: " << prev << endl;
+        cout << "next: " << next << endl;
+        cout << "\n\n" << endl;
+        if (orientation(p, q, prev) == CGAL::RIGHT_TURN) {
+            r = mid - 1;
+        }
+        else if (orientation(p, q, next) == CGAL::RIGHT_TURN) {
+            l = mid + 1;
+        } else {
+            result.second = q;
+            cout << "second x:" << result.second.x() << endl;
+            break;
+        }
+    }
+    cout << "l: " << l - first << endl;
+    cout << "r: " << r - first << endl;
+    cout << "done getting the last" << endl;
+    cout << result.first << " " << result.second << endl;
+    return result;
+}
+
+template<class InputIt, class OutputIt>
+bool conditional_hull(InputIt first, InputIt last, int h_star, OutputIt out) {
+    const int k = ceil(static_cast<double>(distance(first, last)) / h_star);
+    cout << k << endl;
+    vector<vector<Point_2>> disjoint_P;
+    for (int i = 0; i < k; i++) {
+        disjoint_P.emplace_back(first + i * h_star, std::min(first + i * h_star +h_star, last));
+    }
+    vector<vector<Point_2>> convex_hulls;
+    for (const auto& P : disjoint_P) {
+        vector<Point_2> hull;
+        graham(P.begin(), P.end(), back_inserter(hull));
+        convex_hulls.push_back(hull);
+    }
+    vector<Point_2> result;
+    result.emplace_back(-numeric_limits<double>::infinity(), 0);
+    result.push_back(get_lowest(first, last));
+    for (int i = 0; i < h_star - 1; i++) {
+        vector<pair<Point_2, Point_2>> tangent_points;
+
+    }
+    print_2d(disjoint_P);
+    // cout << disjoint_P << endl;
+    // for (int j = 0; j < k; j++) {
+    //
+    // }
+    // vector<Point_2> Hj
+    return true;
+}
+
 
 std::vector<Point_2> test_cgal_graham(std::vector<Point_2> pts) {
     volatile std::size_t sink = 0;
