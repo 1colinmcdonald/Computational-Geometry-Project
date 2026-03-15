@@ -31,9 +31,14 @@ typedef CGAL::Simple_cartesian<double> Kernel;
 typedef Kernel::Point_2 Point_2;
 typedef Kernel::Segment_2 Segment_2;
 typedef CGAL::Polygon_2<K> Polygon_2;
-
-constexpr int LL = 1;
-constexpr int RR = 3;
+constexpr int LR = 1;
+constexpr int LS = 2;
+constexpr int LL = 4;
+constexpr int SL = 8;
+constexpr int RL = 16;
+constexpr int RS = 32;
+constexpr int RR = 64;
+constexpr int SR = 128;
 
 std::random_device rd; // Seed source
 std::mt19937 gen(rd());
@@ -166,15 +171,16 @@ int main(int argc, char *argv[]) {
 
     AlgoType algo;
 
-    vector<int> vals = {8, 4, 5, 9};
-    int i = bin_search(vals.begin(), vals.end(), -5);
-    cout << i << endl;
-
     // Take CLI arg for what algo to run
     if (argc != 4) {
         std::cerr << "Must specify algorithm, number of points, and point distribution" << std::endl;
         return 1;
     }
+    Point_2 p1(-10, 0);
+    Point_2 p2(10, 0);
+    Point_2 p3(0, 0);
+    int orient_2_same = orientation(p1, p2, p3);
+    cout << "orient_2_same" << orient_2_same << endl;
     string algo_arg = argv[1];
     string num_points = argv[2];
     string distribution = argv[3];
@@ -252,12 +258,14 @@ void plot_hull(std::vector<Point_2> points, std::vector<Point_2> hull) {
         cout << "(" << p << ")";
     }
     cout << "" << endl;
-    Point_2 q(200,200);
+    const Point_2 q(5,-20);
     const auto t_ll_it = get_tangent_point(hull.begin(),hull.end(),
-                                                                        hull.begin(), hull.end(), q, LL);
+                                                                        hull.begin(), hull.end() - 1,
+                                                                        q, LL | SL);
     const auto t_ll = *t_ll_it;
     const auto t_rr_it = get_tangent_point(hull.begin(),hull.end(),
-                                                                        hull.begin(), hull.end(), q, RR);
+                                                                        hull.begin(), hull.end() - 1,
+                                                                        q, RR | RS);
     const auto t_rr = *t_rr_it;
     plot.add_point(q.x(), q.y(), 5, "green", "green");
     plot.add_point(t_ll.x(), t_ll.y(), 5, "orange", "orange");
@@ -343,7 +351,7 @@ OutputIt graham(InputIt first, InputIt last, OutputIt out) {
         l_upper.push_back(points[i]);
     }
 
-    for (auto it = l_upper.begin(); it != l_upper.end(); ++it) {
+    for (auto it = l_upper.end() - 1; it != l_upper.begin() - 1; --it) {
         *out++ = *it;
     }
     return out;
@@ -580,17 +588,22 @@ pair<Point_2, Point_2> get_tangent_points_linear(RandomIt first, RandomIt last, 
     return result;
 }
 
+// Requires hull to be in counter-clockwise order.
 template<class RandomIt>
 RandomIt get_tangent_point(RandomIt beginning, RandomIt end, RandomIt l, RandomIt r, Point_2 p, int target_orient) {
+    cout << "l index: " << l - beginning << endl;
+    cout << "r index: " << r - beginning << endl;
     if (l > r) {
+        cout << "Couldn't find it!" << endl;
         return r;
     }
     RandomIt mid = l + (r - l) / 2;
 
     const int mid_orient_id = get_orient_id(beginning, end, mid, p);
     const int first_orient_id = get_orient_id(beginning, end, l, p);
-    const int last_orient_id = get_orient_id(beginning, end, r - 1, p);
-    if (mid_orient_id == target_orient) {
+    const int last_orient_id = get_orient_id(beginning, end, r, p);
+    if (mid_orient_id & target_orient) {
+        cout << "Found it!" << endl;
         return mid;
     }
     if (first_orient_id <= mid_orient_id) {
@@ -616,14 +629,26 @@ int get_orient_id(RandomIt beginning, RandomIt end, RandomIt on_hull, Point_2 p)
     cout << "on: " << on << endl;
     if (op == CGAL::LEFT_TURN) {
         if (on == CGAL::RIGHT_TURN) {
-            return 0;
+            return LR;
         }
-        return 1;
+        if (on == CGAL::LEFT_TURN) {
+            return LL;
+        }
+        return LS;
+    }
+    if (op == CGAL::RIGHT_TURN) {
+        if (on == CGAL::LEFT_TURN) {
+            return RL;
+        }
+        if (on == CGAL::RIGHT_TURN) {
+            return RR;
+        }
+        return RS;
     }
     if (on == CGAL::LEFT_TURN) {
-        return 2;
+        return SL;
     }
-    return 3;
+    return SR;
 }
 
 template<class RandomIt>
