@@ -1,6 +1,7 @@
 #ifndef BENCHMARK_H
 #define BENCHMARK_H
 
+#include "svg_plot.h"
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/ch_graham_andrew.h>
 #include <CGAL/Polygon_2.h>
@@ -71,4 +72,10 @@ int get_orient_id(RandomIt beginning, RandomIt end, RandomIt on_hull, Point_2 p)
 
 template<class RandomIt>
 RandomIt get_tangent_point(RandomIt beginning, RandomIt end, RandomIt l, RandomIt r, Point_2 p, int target_orient);
+
+template <class InputIt, class OutputIt>
+OutputIt chan(InputIt first, InputIt last, OutputIt out);
+
+void plot_hull_without_writing(SvgPlot &plot, std::vector<Point_2> points,
+                               std::vector<Point_2> hull);
 #endif
