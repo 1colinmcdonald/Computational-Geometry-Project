@@ -258,7 +258,7 @@ void plot_hull(std::vector<Point_2> points, std::vector<Point_2> hull) {
         cout << "(" << p << ")";
     }
     cout << "" << endl;
-    const Point_2 q(5,-20);
+    const Point_2 q(200,200);
     const auto t_ll_it = get_tangent_point(hull.begin(),hull.end(),
                                                                         hull.begin(), hull.end() - 1,
                                                                         q, LL | SL);
@@ -591,10 +591,10 @@ pair<Point_2, Point_2> get_tangent_points_linear(RandomIt first, RandomIt last, 
 // Requires hull to be in counter-clockwise order.
 template<class RandomIt>
 RandomIt get_tangent_point(RandomIt beginning, RandomIt end, RandomIt l, RandomIt r, Point_2 p, int target_orient) {
-    cout << "l index: " << l - beginning << endl;
-    cout << "r index: " << r - beginning << endl;
+    // cout << "l index: " << l - beginning << endl;
+    // cout << "r index: " << r - beginning << endl;
     if (l > r) {
-        cout << "Couldn't find it!" << endl;
+        // cout << "Couldn't find it!" << endl;
         return r;
     }
     RandomIt mid = l + (r - l) / 2;
@@ -603,7 +603,7 @@ RandomIt get_tangent_point(RandomIt beginning, RandomIt end, RandomIt l, RandomI
     const int first_orient_id = get_orient_id(beginning, end, l, p);
     const int last_orient_id = get_orient_id(beginning, end, r, p);
     if (mid_orient_id & target_orient) {
-        cout << "Found it!" << endl;
+        // cout << "Found it!" << endl;
         return mid;
     }
     if (first_orient_id <= mid_orient_id) {
@@ -621,12 +621,12 @@ RandomIt get_tangent_point(RandomIt beginning, RandomIt end, RandomIt l, RandomI
 template<class RandomIt>
 int get_orient_id(RandomIt beginning, RandomIt end, RandomIt on_hull, Point_2 p) {
     pair<Point_2, Point_2> neighbors = get_neighbors(beginning, end, on_hull);
-    cout << "prev neighbor" << neighbors.first << endl;
-    cout << "next neighbor" << neighbors.second << endl;
+    // cout << "prev neighbor" << neighbors.first << endl;
+    // cout << "next neighbor" << neighbors.second << endl;
     const int op = orientation(p, *on_hull, neighbors.first);
     const int on = orientation(p, *on_hull, neighbors.second);
-    cout << "op: " << op << endl;
-    cout << "on: " << on << endl;
+    // cout << "op: " << op << endl;
+    // cout << "on: " << on << endl;
     if (op == CGAL::LEFT_TURN) {
         if (on == CGAL::RIGHT_TURN) {
             return LR;
@@ -671,19 +671,19 @@ pair<Point_2, Point_2> get_tangent_points(RandomIt first, RandomIt last, Point_2
             break;
         }
     }
-    cout << "done getting the first" << endl;
+    // cout << "done getting the first" << endl;
     l = first;
     r = last - 1;
     while (l <= r) {
         RandomIt mid = l + (r - l) / 2;
-        cout << mid - first << endl;
+        // cout << mid - first << endl;
         Point_2 q = *mid;
         Point_2 prev = *(first + (mid - first - 1) % n);
         Point_2 next = *(first + (mid - first + 1) % n);
-        cout << "q: " << q << endl;
-        cout << "prev: " << prev << endl;
-        cout << "next: " << next << endl;
-        cout << "\n\n" << endl;
+        // cout << "q: " << q << endl;
+        // cout << "prev: " << prev << endl;
+        // cout << "next: " << next << endl;
+        // cout << "\n\n" << endl;
         if (orientation(p, q, prev) == CGAL::RIGHT_TURN) {
             r = mid - 1;
         }
@@ -691,14 +691,14 @@ pair<Point_2, Point_2> get_tangent_points(RandomIt first, RandomIt last, Point_2
             l = mid + 1;
         } else {
             result.second = q;
-            cout << "second x:" << result.second.x() << endl;
+            // cout << "second x:" << result.second.x() << endl;
             break;
         }
     }
-    cout << "l: " << l - first << endl;
-    cout << "r: " << r - first << endl;
-    cout << "done getting the last" << endl;
-    cout << result.first << " " << result.second << endl;
+    // cout << "l: " << l - first << endl;
+    // cout << "r: " << r - first << endl;
+    // cout << "done getting the last" << endl;
+    // cout << result.first << " " << result.second << endl;
     return result;
 }
 
