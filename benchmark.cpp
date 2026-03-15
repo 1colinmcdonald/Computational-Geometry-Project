@@ -226,8 +226,13 @@ int main(int argc, char *argv[]) {
   while (in >> x >> y) {
     pts.emplace_back(x, y);
   }
-
-  vector<Point_2> cond;
+  vector<Point_2> hull_3;
+  CGAL::ch_graham_andrew(pts.begin(), pts.end(), back_inserter(hull_3));
+  Point_2 target(0, -10);
+  Point_2 tangent =
+      *(get_tangent_point(hull_3.begin(), hull_3.end(), hull_3.begin(),
+                          hull_3.end() - 1, target, LL));
+  cout << "Tangent" << tangent << endl;
   // conditional_hull(pts.begin(), pts.end(), 2, cond);
   auto t1 = std::chrono::high_resolution_clock::now();
   algo(pts.begin(), pts.end(), std::back_inserter(hull));
@@ -238,11 +243,11 @@ int main(int argc, char *argv[]) {
       << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
       << " ms\n";
 
-  cout << "Result: " << endl;
-  for (Point_2 p : hull) {
-    cout << p << endl;
-  }
-  cout << "end of result" << endl;
+  // cout << "Result: " << endl;
+  // for (Point_2 p : hull) {
+  //   cout << p << endl;
+  // }
+  // cout << "end of result" << endl;
   plot_hull(pts, hull);
   vector<Point_2> correct_hull;
   CGAL::ch_bykat(pts.begin(), pts.end(), std::back_inserter(correct_hull));
@@ -264,10 +269,10 @@ void plot_hull_without_writing(SvgPlot &plot, std::vector<Point_2> points,
     plot.add_point(q.x(), q.y(), 20, "red", "red");
   for (auto &q : hull)
     poly.push_back({q.x(), q.y()});
-  for (auto &p : hull) {
-    cout << "(" << p << ")";
-  }
-  cout << "" << endl;
+  // for (auto &p : hull) {
+  //   cout << "(" << p << ")";
+  // }
+  // cout << "" << endl;
   const Point_2 q(12, 18);
   plot.add_polyline(poly, 2, "blue", true);
 }
@@ -282,7 +287,25 @@ void plot_hull(std::vector<Point_2> points, std::vector<Point_2> hull) {
     plot.add_point(q.x(), q.y(), 20, "red", "red");
   for (auto &q : hull)
     poly.push_back({q.x(), q.y()});
-  const Point_2 q(12, 18);
+
+  const Point_2 q(0, -10);
+  const auto t_ll_it = get_tangent_point(hull.begin(), hull.end(), hull.begin(),
+                                         hull.end() - 1, q, LL | SL);
+  const auto t_ll = *t_ll_it;
+  const auto t_rr_it = get_tangent_point(hull.begin(), hull.end(), hull.begin(),
+                                         hull.end() - 1, q, RR | RS);
+  const auto t_rr = *t_rr_it;
+  plot.add_point(q.x(), q.y(), 5, "green", "green");
+  plot.add_point(t_ll.x(), t_ll.y(), 5, "orange", "orange");
+  plot.add_point(t_rr.x(), t_rr.y(), 5, "orange", "orange");
+  vector<pair<double, double>> t1;
+  vector<pair<double, double>> t2;
+  t1.push_back({q.x(), q.y()});
+  t1.push_back({t_ll.x(), t_ll.y()});
+  t2.push_back({q.x(), q.y()});
+  t2.push_back({t_rr.x(), t_rr.y()});
+  plot.add_polyline(t1, 2, "purple", true);
+  plot.add_polyline(t2, 2, "purple", true);
   plot.add_polyline(poly, 2, "blue", true);
   plot.write("debug.svg");
   std::cout << "Wrote debug.svg\n";
@@ -560,45 +583,51 @@ template <class RandomIt>
 pair<Point_2, Point_2> get_neighbors(RandomIt first, RandomIt last,
                                      RandomIt curr) {
   pair<Point_2, Point_2> result;
-  if (curr == first) {
-    result.first = *(last - 1);
-  } else {
-    result.first = *(first + (curr - first - 1));
-  }
-  if (curr == last - 1) {
-    result.second = *(first);
-  } else {
-    result.second = *(first + (curr - first + 1));
-  }
+  result.first = *(prev_point_on_hull(first, last, curr));
+  result.second = *(next_point_on_hull(first, last, curr));
   return result;
 }
 
 template <class RandomIt>
-pair<Point_2, Point_2> get_tangent_points_linear(RandomIt first, RandomIt last,
-                                                 Point_2 p) {
-  pair<Point_2, Point_2> result;
-  RandomIt curr = first;
-  Point_2 prev;
-  Point_2 next;
-  while (curr != last) {
-    if (pair<Point_2, Point_2> neighbors = get_neighbors(first, last, curr);
-        orientation(p, *curr, neighbors.first) == CGAL::LEFT_TURN and
-        orientation(p, *curr, neighbors.second) == CGAL::LEFT_TURN) {
-      result.first = *curr;
-      break;
-    }
-    curr += 1;
+RandomIt next_point_on_hull(RandomIt first, RandomIt last, RandomIt curr) {
+  if (curr == last - 1) {
+    return first;
   }
-  curr = first;
-  while (curr != last) {
-    if (pair<Point_2, Point_2> neighbors = get_neighbors(first, last, curr);
-        orientation(p, *curr, neighbors.first) == CGAL::RIGHT_TURN and
-        orientation(p, *curr, neighbors.second) == CGAL::RIGHT_TURN) {
-      result.second = *curr;
-      break;
-    }
-    curr += 1;
+  return first + (curr - first + 1);
+}
+
+template <class RandomIt>
+RandomIt prev_point_on_hull(RandomIt first, RandomIt last, RandomIt curr) {
+  if (curr == first) {
+    return last - 1;
   }
+  return first + (curr - first - 1);
+}
+
+template <class RandomIt>
+pair<RandomIt, RandomIt>
+get_tangent_points_linear(RandomIt first, RandomIt last, const Point_2 &p) {
+  pair<RandomIt, RandomIt> result;
+  bool found_ll = false;
+  bool found_rr = false;
+
+  for (RandomIt curr = first; curr != last; ++curr) {
+    int id = get_orient_id(first, last, curr, p);
+
+    if (!found_ll && (id == LL || id == LS || id == SL)) {
+      result.first = curr;
+      found_ll = true;
+    }
+
+    if (!found_rr && (id == RR || id == RS || id == SR)) {
+      result.second = curr;
+      found_rr = true;
+    }
+
+    if (found_ll && found_rr)
+      break;
+  }
+
   return result;
 }
 
@@ -610,16 +639,16 @@ RandomIt get_tangent_point(RandomIt beginning, RandomIt end, RandomIt l,
   // cout << "l index: " << l - beginning << endl;
   // cout << "r index: " << r - beginning << endl;
   if (l > r) {
-    cout << "Couldn't find it!" << endl;
+    // cout << "Couldn't find it!" << endl;
     return r;
   }
   RandomIt mid = l + (r - l) / 2;
-
   const int mid_orient_id = get_orient_id(beginning, end, mid, p);
   const int first_orient_id = get_orient_id(beginning, end, l, p);
   const int last_orient_id = get_orient_id(beginning, end, r, p);
   if (mid_orient_id & target_orient) {
-    cout << "Found it!" << endl;
+    // cout << "The tangent point is: " << *mid;
+    // cout << "Found it!" << endl;
     return mid;
   }
   if (first_orient_id <= mid_orient_id) {
@@ -670,14 +699,28 @@ int get_orient_id(RandomIt beginning, RandomIt end, RandomIt on_hull,
 
 template <class InputIt, class OutputIt>
 OutputIt chan(InputIt first, InputIt last, OutputIt out) {
-  conditional_hull(first, last, 12, out);
+  int h_star = 2;
+  while (!conditional_hull(first, last, h_star, out)) {
+    cout << "Number of points: " << static_cast<int>(std::distance(first, last))
+         << endl;
+    cout << "h_star ** 2 " << h_star * h_star << endl;
+    int n_star =
+        std::min(h_star * h_star, static_cast<int>(std::distance(first, last)));
+    if (n_star == h_star) {
+      throw std::runtime_error("Chan failed even with h_star == n");
+    }
+    h_star =
+        std::min(h_star * h_star, static_cast<int>(std::distance(first, last)));
+    cout << "n_star: " << n_star << endl;
+    cout << "h_star: " << h_star << endl;
+  }
   return out;
 }
 
 template <class InputIt, class OutputIt>
 bool conditional_hull(InputIt first, InputIt last, int h_star, OutputIt out) {
   const int k = ceil(static_cast<double>(distance(first, last)) / h_star);
-  cout << k << endl;
+  // cout << k << endl;
   vector<vector<Point_2>> disjoint_P;
   for (int i = 0; i < k; i++) {
     disjoint_P.emplace_back(first + i * h_star,
@@ -690,42 +733,53 @@ bool conditional_hull(InputIt first, InputIt last, int h_star, OutputIt out) {
     CGAL::ch_graham_andrew(P.begin(), P.end(), back_inserter(hull));
     convex_hulls.push_back(hull);
     plot_hull_without_writing(plot, P, hull);
-    cout << "Plotted points" << endl;
-    for (SvgPlot::Pt g : plot.points) {
-      cout << "(" << g.x << ", " << g.y << ")" << endl;
-    }
-    cout << "End of plotted points" << endl;
-    cout << "Hull points" << endl;
-    for (Point_2 g : hull) {
-      cout << g << endl;
-    }
+    // cout << "Plotted points" << endl;
+    // for (SvgPlot::Pt g : plot.points) {
+    //   cout << "(" << g.x << ", " << g.y << ")" << endl;
+    // }
+    // cout << "End of plotted points" << endl;
+    // cout << "Hull points" << endl;
+    // for (Point_2 g : hull) {
+    //   cout << g << endl;
+    // }
   }
   plot.write("debug2.svg");
   vector<Point_2> result;
   result.emplace_back(-numeric_limits<double>::infinity(), 0);
   Point_2 v1 = get_lowest(first, last);
   result.push_back(v1);
-  cout << "Back: " << result.back() << endl;
+  // cout << "Back: " << result.back() << endl;
+  int last_hull = -1;
   for (int i = 0; i < h_star - 1; i++) {
-    vector<Point_2> tangent_points;
-    for (auto &hull : convex_hulls) {
-      cout << "Getting tangent points to: " << result.back() << endl;
-      cout << "On hull:" << endl;
-      for (Point_2 g : hull) {
-        cout << g << endl;
+
+    vector<pair<Point_2, int>> tangent_points_and_hulls;
+    for (int j = 0; j < convex_hulls.size(); j++) {
+      if (j == last_hull) {
+        auto& t = next_point_on_hull(first, RandomIt last, RandomIt curr)
       }
-      Point_2 t_ll = *(get_tangent_point(hull.begin(), hull.end(), hull.begin(),
-                                         hull.end(), result.back(), LL | SL));
-      Point_2 t_rr = *(get_tangent_point(hull.begin(), hull.end(), hull.begin(),
-                                         hull.end(), result.back(), RR | RS));
-      cout << "Adding " << t_ll << " to tangent points" << endl;
-      cout << "Adding " << t_rr << " to tangent points" << endl;
-      tangent_points.push_back(t_ll);
+    }
+    for (auto &hull : convex_hulls) {
+      // cout << "Getting tangent points to: " << result.back() << endl;
+      // cout << "On hull:" << endl;
+      // for (Point_2 g : hull) {
+      //   cout << g << endl;
+      // }
+      auto [t_ll, t_rr] =
+          get_tangent_points_linear(hull.begin(), hull.end(), result.back());
+      // Point_2 t_ll =
+      //     *(get_tangent_point(hull.begin(), hull.end(), hull.begin(),
+      //                         hull.end() - 1, result.back(), LL | SL));
+      // Point_2 t_rr =
+      //     *(get_tangent_point(hull.begin(), hull.end(), hull.begin(),
+      //                         hull.end() - 1, result.back(), RR | RS));
+      // cout << "Adding " << t_ll << " to tangent points" << endl;
+      // cout << "Adding " << t_rr << " to tangent points" << endl;
+      tangent_points_and_hulls.push_back(t_ll);
       tangent_points.push_back(t_rr);
     }
     optional<Point_2> p;
     for (Point_2 q : tangent_points) {
-      cout << "Checking from tangent points: " << q << endl;
+      // cout << "Checking from tangent points: " << q << endl;
       if (q != *(result.rbegin() + 1) && q != result.back()) {
         if (!p) {
           p = q;
@@ -742,10 +796,10 @@ bool conditional_hull(InputIt first, InputIt last, int h_star, OutputIt out) {
       copy(result.begin() + 1, result.end(), out);
       return true;
     }
-    cout << "Adding " << *p << " to result" << endl;
+    // cout << "Adding " << *p << " to result" << endl;
     result.push_back(*p);
   }
-  copy(result.begin() + 1, result.end(), out);
+  // copy(result.begin() + 1, result.end(), out);
   return false;
 }
 
