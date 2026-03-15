@@ -719,87 +719,130 @@ OutputIt chan(InputIt first, InputIt last, OutputIt out) {
 
 template <class InputIt, class OutputIt>
 bool conditional_hull(InputIt first, InputIt last, int h_star, OutputIt out) {
-  const int k = ceil(static_cast<double>(distance(first, last)) / h_star);
-  // cout << k << endl;
-  vector<vector<Point_2>> disjoint_P;
-  for (int i = 0; i < k; i++) {
-    disjoint_P.emplace_back(first + i * h_star,
-                            std::min(first + i * h_star + h_star, last));
-  }
-  vector<vector<Point_2>> convex_hulls;
-  SvgPlot plot;
-  for (const auto &P : disjoint_P) {
-    vector<Point_2> hull;
-    CGAL::ch_graham_andrew(P.begin(), P.end(), back_inserter(hull));
-    convex_hulls.push_back(hull);
-    plot_hull_without_writing(plot, P, hull);
-    // cout << "Plotted points" << endl;
-    // for (SvgPlot::Pt g : plot.points) {
-    //   cout << "(" << g.x << ", " << g.y << ")" << endl;
-    // }
-    // cout << "End of plotted points" << endl;
-    // cout << "Hull points" << endl;
-    // for (Point_2 g : hull) {
-    //   cout << g << endl;
-    // }
-  }
-  plot.write("debug2.svg");
-  vector<Point_2> result;
-  result.emplace_back(-numeric_limits<double>::infinity(), 0);
-  Point_2 v1 = get_lowest(first, last);
-  result.push_back(v1);
-  // cout << "Back: " << result.back() << endl;
-  int last_hull = -1;
-  for (int i = 0; i < h_star - 1; i++) {
+  const int n = distance(first, last);
+  const int k = ceil(static_cast<double>(n) / h_star);
 
-    vector<pair<Point_2, int>> tangent_points_and_hulls;
-    for (int j = 0; j < convex_hulls.size(); j++) {
-      if (j == last_hull) {
-        auto& t = next_point_on_hull(first, RandomIt last, RandomIt curr)
+  // 1. Partition and compute mini-hulls
+  vector<vector<Point_2>> convex_hulls(k);
+
+  Point_2 global_min = *first;
+  int start_hull_idx = 0;
+
+  for (int i = 0; i < k; i++) {
+    InputIt sub_start = first + i * h_star;
+    InputIt sub_end = std::min(first + (i + 1) * h_star, last);
+
+    // Find global min while partitioning to avoid extra passes
+    for (auto it = sub_start; it != sub_end; ++it) {
+      if (y_comp(*it, global_min)) {
+        global_min = *it;
+        start_hull_idx = i;
       }
     }
-    for (auto &hull : convex_hulls) {
-      // cout << "Getting tangent points to: " << result.back() << endl;
-      // cout << "On hull:" << endl;
-      // for (Point_2 g : hull) {
-      //   cout << g << endl;
-      // }
-      auto [t_ll, t_rr] =
-          get_tangent_points_linear(hull.begin(), hull.end(), result.back());
-      // Point_2 t_ll =
-      //     *(get_tangent_point(hull.begin(), hull.end(), hull.begin(),
-      //                         hull.end() - 1, result.back(), LL | SL));
-      // Point_2 t_rr =
-      //     *(get_tangent_point(hull.begin(), hull.end(), hull.begin(),
-      //                         hull.end() - 1, result.back(), RR | RS));
-      // cout << "Adding " << t_ll << " to tangent points" << endl;
-      // cout << "Adding " << t_rr << " to tangent points" << endl;
-      tangent_points_and_hulls.push_back(t_ll);
-      tangent_points.push_back(t_rr);
-    }
-    optional<Point_2> p;
-    for (Point_2 q : tangent_points) {
-      // cout << "Checking from tangent points: " << q << endl;
-      if (q != *(result.rbegin() + 1) && q != result.back()) {
-        if (!p) {
-          p = q;
-        } else if (orientation(result.back(), q, *p) == CGAL::LEFT_TURN) {
-          p = q;
-        } else if (orientation(result.back(), q, *p) == CGAL::COLLINEAR &&
-                   squared_distance(q, result.back()) >
-                       squared_distance(*p, result.back())) {
-          p = q;
+
+    CGAL::ch_graham_andrew(sub_start, sub_end, back_inserter(convex_hulls[i]));
+  }
+
+  // Find the exact index of global_min within its own mini-hull
+  // Since the mini-hull is small (size h_star), this is O(h_star) once.
+  auto it_in_hull = std::find(convex_hulls[start_hull_idx].begin(),
+                              convex_hulls[start_hull_idx].end(), global_min);
+  int current_point_in_hull_idx =
+      std::distance(convex_hulls[start_hull_idx].begin(), it_in_hull);
+  int current_hull_idx = start_hull_idx;
+
+  vector<Point_2> result;
+  result.push_back(global_min);
+
+  for (int i = 0; i < h_star; i++) {
+    Point_2 current_v = result.back();
+    Point_2 next_candidate;
+    bool candidate_found = false;
+    int next_hull_idx = -1;
+    int next_point_idx = -1;
+
+    for (int j = 0; j < k; j++) {
+      Point_2 q;
+      int q_idx = -1;
+
+      if (j == current_hull_idx) {
+        // OPTIMIZED: Just grab the next point in the cyclic order of this hull
+        q_idx = (current_point_in_hull_idx + 1) % convex_hulls[j].size();
+        q = convex_hulls[j][q_idx];
+      } else {
+        // Use your Tangent Lemma Binary Search here
+        auto t_it = get_tangent_point(
+            convex_hulls[j].begin(), convex_hulls[j].end(),
+            convex_hulls[j].begin(), convex_hulls[j].end() - 1, current_v,
+            LL | LS | SL);
+        q = *t_it;
+        q_idx = std::distance(convex_hulls[j].begin(), t_it);
+      }
+
+      // Standard Jarvis comparison - Switch to LEFT_TURN for CCW hull
+      if (!candidate_found ||
+          orientation(current_v, next_candidate, q) == CGAL::LEFT_TURN) {
+        next_candidate = q;
+        next_hull_idx = j;
+        next_point_idx = q_idx;
+        candidate_found = true;
+      } else if (orientation(current_v, next_candidate, q) == CGAL::COLLINEAR) {
+        // If points are collinear, pick the one further away to avoid redundant
+        // points
+        if (squared_distance(current_v, q) >
+            squared_distance(current_v, next_candidate)) {
+          next_candidate = q;
+          next_hull_idx = j;
+          next_point_idx = q_idx;
+        }
+      }
+
+      Point_2 q2;
+      int q2_idx = -1;
+
+      if (j == current_hull_idx) {
+        // OPTIMIZED: Just grab the next point in the cyclic order of this hull
+        q2_idx = (current_point_in_hull_idx + 1) % convex_hulls[j].size();
+        q2 = convex_hulls[j][q2_idx];
+      } else {
+        // Use your Tangent Lemma Binary Search here
+        auto t_it = get_tangent_point(
+            convex_hulls[j].begin(), convex_hulls[j].end(),
+            convex_hulls[j].begin(), convex_hulls[j].end() - 1, current_v,
+            RR | RS | SR);
+        q2 = *t_it;
+        q2_idx = std::distance(convex_hulls[j].begin(), t_it);
+      }
+
+      // Standard Jarvis comparison - Switch to LEFT_TURN for CCW hull
+      if (!candidate_found ||
+          orientation(current_v, next_candidate, q2) == CGAL::LEFT_TURN) {
+        next_candidate = q2;
+        next_hull_idx = j;
+        next_point_idx = q2_idx;
+        candidate_found = true;
+      } else if (orientation(current_v, next_candidate, q2) == CGAL::COLLINEAR) {
+        // If points are collinear, pick the one further away to avoid redundant
+        // points
+        if (squared_distance(current_v, q2) >
+            squared_distance(current_v, next_candidate)) {
+          next_candidate = q2;
+          next_hull_idx = j;
+          next_point_idx = q2_idx;
         }
       }
     }
-    if (p == v1) {
-      copy(result.begin() + 1, result.end(), out);
+
+    if (next_candidate == global_min) {
+      copy(result.begin(), result.end(), out);
       return true;
     }
-    // cout << "Adding " << *p << " to result" << endl;
-    result.push_back(*p);
+
+    result.push_back(next_candidate);
+    current_hull_idx = next_hull_idx;
+    current_point_in_hull_idx = next_point_idx;
   }
-  // copy(result.begin() + 1, result.end(), out);
+
   return false;
 }
 
