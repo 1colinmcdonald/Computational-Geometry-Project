@@ -232,12 +232,12 @@ int main(int argc, char *argv[])
 	std::cout << "Time: "
 			  << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
 			  << " ms\n";
-	plot_hull(pts, hull);
+	// plot_hull(pts, hull);
 
-	// 1) Read all input points
-	SvgPlot plot;
-	for (auto &q : pts)
-		plot.add_point(q.x(), q.y(), 3, "gray", "gray");
+	// // 1) Read all input points
+	// SvgPlot plot;
+	// for (auto &q : pts)
+	// 	plot.add_point(q.x(), q.y(), 3, "gray", "gray");
 	return 0;
 }
 
