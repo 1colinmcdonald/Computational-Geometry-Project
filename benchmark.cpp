@@ -704,6 +704,10 @@ OutputIt chan(InputIt first, InputIt last, OutputIt out) {
     cout << "Number of points: " << static_cast<int>(std::distance(first, last))
          << endl;
     cout << "h_star ** 2 " << h_star * h_star << endl;
+    if (h_star * h_star == 0) {
+      h_star = static_cast<int>(std::distance(first, last));
+      continue;
+    }
     int n_star =
         std::min(h_star * h_star, static_cast<int>(std::distance(first, last)));
     if (n_star == h_star) {
