@@ -16,7 +16,7 @@ from scipy.spatial import ConvexHull, QhullError  # pyright: ignore[reportMissin
 TRIALS = 3
 STEPS = 8
 SEED = 42
-JARVIS_MAX_N = 5000
+JARVIS_MAX_N = 5000000
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 BENCHMARK_PATH = PROJECT_ROOT / "bin" / "benchmark"
 INPUT_DIR = PROJECT_ROOT / "input"
@@ -35,7 +35,7 @@ ALGO_COLORS: dict[str, str] = {
     "melkman": "#1de9f4",
 }
 
-ALL_ALGOS = ["jarvis", "graham", "my_graham", "ray_shooting_quickhull", "chan", "toussaint", "bykat", "cgal_jarvis", "melkman"]
+ALL_ALGOS = ["jarvis", "graham", "my_graham", "ray_shooting_quickhull", "chan", "toussaint", "bykat", "cgal_jarvis"]
 
 ALL_DISTRIBUTIONS = ["circle", "uniform", "gaussian", "square"]
 # Distributions that accept a target hull size

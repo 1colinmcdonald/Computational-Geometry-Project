@@ -18,3 +18,192 @@ Time: 6 ms
 
 These results make sense because the Jarvis algorithm's time complexity is O(nh). 
 So an input with many points on the hull will be much slower for Jarvis.
+
+
+
+Colins-MacBook-Air:~/Documents/cal_poly/CSC_570_CG/project/runner % python3 run_convex_hull.py --algorithms jarvis graham my_graham ray_shooting_quickhull toussaint bykat melkman chan --vary n --max-n 1000000
+Plot output: /Users/colinmcdonald/Documents/cal_poly/CSC_570_CG/project/runner/results/plot.png
+Mode:        vary n
+Algorithms:  jarvis, graham, my_graham, ray_shooting_quickhull, toussaint, bykat, melkman, chan
+Runs:        171
+
+[  1/171] algo=jarvis                 n=1000     target_h=10050   t=    2 ms
+[  2/171] algo=graham                 n=1000     target_h=10050   t=    0 ms
+[  3/171] algo=my_graham              n=1000     target_h=10050   t=    0 ms
+[  4/171] algo=ray_shooting_quickhull n=1000     target_h=10050   t=    1 ms
+[  5/171] algo=toussaint              n=1000     target_h=10050   t=    0 ms
+[  6/171] algo=bykat                  n=1000     target_h=10050   t=    0 ms
+[  7/171] algo=melkman                n=1000     target_h=10050   t=    0 ms
+[  8/171] algo=chan                   n=1000     target_h=10050   t=    1 ms
+[  9/171] algo=jarvis                 n=1000     target_h=10050   t=    2 ms
+[ 10/171] algo=graham                 n=1000     target_h=10050   t=    0 ms
+[ 11/171] algo=my_graham              n=1000     target_h=10050   t=    0 ms
+[ 12/171] algo=ray_shooting_quickhull n=1000     target_h=10050   t=    0 ms
+[ 13/171] algo=toussaint              n=1000     target_h=10050   t=    0 ms
+[ 14/171] algo=bykat                  n=1000     target_h=10050   t=    0 ms
+[ 15/171] algo=melkman                n=1000     target_h=10050   t=    0 ms
+[ 16/171] algo=chan                   n=1000     target_h=10050   t=    0 ms
+[ 17/171] algo=jarvis                 n=1000     target_h=10050   t=    2 ms
+[ 18/171] algo=graham                 n=1000     target_h=10050   t=    0 ms
+[ 19/171] algo=my_graham              n=1000     target_h=10050   t=    0 ms
+[ 20/171] algo=ray_shooting_quickhull n=1000     target_h=10050   t=    0 ms
+[ 21/171] algo=toussaint              n=1000     target_h=10050   t=    0 ms
+[ 22/171] algo=bykat                  n=1000     target_h=10050   t=    0 ms
+[ 23/171] algo=melkman                n=1000     target_h=10050   t=    0 ms
+[ 24/171] algo=chan                   n=1000     target_h=10050   t=    0 ms
+Skipping jarvis at n=143714 (>5000)
+[ 25/171] algo=graham                 n=143714   target_h=10050   t=   10 ms
+[ 26/171] algo=my_graham              n=143714   target_h=10050   t=   16 ms
+[ 27/171] algo=ray_shooting_quickhull n=143714   target_h=10050   t=   15 ms
+[ 28/171] algo=toussaint              n=143714   target_h=10050   t=    1 ms
+[ 29/171] algo=bykat                  n=143714   target_h=10050   t=    4 ms
+[ 30/171] algo=melkman                n=143714   target_h=10050   t=    0 ms
+[ 31/171] algo=chan                   n=143714   target_h=10050   t=  127 ms
+[ 32/171] algo=graham                 n=143714   target_h=10050   t=   10 ms
+[ 33/171] algo=my_graham              n=143714   target_h=10050   t=   16 ms
+[ 34/171] algo=ray_shooting_quickhull n=143714   target_h=10050   t=   15 ms
+[ 35/171] algo=toussaint              n=143714   target_h=10050   t=    1 ms
+[ 36/171] algo=bykat                  n=143714   target_h=10050   t=    4 ms
+[ 37/171] algo=melkman                n=143714   target_h=10050   t=    0 ms
+[ 38/171] algo=chan                   n=143714   target_h=10050   t=  121 ms
+[ 39/171] algo=graham                 n=143714   target_h=10050   t=   10 ms
+[ 40/171] algo=my_graham              n=143714   target_h=10050   t=   16 ms
+[ 41/171] algo=ray_shooting_quickhull n=143714   target_h=10050   t=   14 ms
+[ 42/171] algo=toussaint              n=143714   target_h=10050   t=    1 ms
+[ 43/171] algo=bykat                  n=143714   target_h=10050   t=    4 ms
+[ 44/171] algo=melkman                n=143714   target_h=10050   t=    0 ms
+[ 45/171] algo=chan                   n=143714   target_h=10050   t=  122 ms
+Skipping jarvis at n=286429 (>5000)
+[ 46/171] algo=graham                 n=286429   target_h=10050   t=   22 ms
+[ 47/171] algo=my_graham              n=286429   target_h=10050   t=   34 ms
+[ 48/171] algo=ray_shooting_quickhull n=286429   target_h=10050   t=   21 ms
+[ 49/171] algo=toussaint              n=286429   target_h=10050   t=    3 ms
+[ 50/171] algo=bykat                  n=286429   target_h=10050   t=    7 ms
+[ 51/171] algo=melkman                n=286429   target_h=10050   t=    0 ms
+[ 52/171] algo=chan                   n=286429   target_h=10050   t=  227 ms
+[ 53/171] algo=graham                 n=286429   target_h=10050   t=   54 ms
+[ 54/171] algo=my_graham              n=286429   target_h=10050   t=   34 ms
+[ 55/171] algo=ray_shooting_quickhull n=286429   target_h=10050   t=   20 ms
+[ 56/171] algo=toussaint              n=286429   target_h=10050   t=    3 ms
+[ 57/171] algo=bykat                  n=286429   target_h=10050   t=    7 ms
+[ 58/171] algo=melkman                n=286429   target_h=10050   t=    0 ms
+[ 59/171] algo=chan                   n=286429   target_h=10050   t=  228 ms
+[ 60/171] algo=graham                 n=286429   target_h=10050   t=   22 ms
+[ 61/171] algo=my_graham              n=286429   target_h=10050   t=   34 ms
+[ 62/171] algo=ray_shooting_quickhull n=286429   target_h=10050   t=   20 ms
+[ 63/171] algo=toussaint              n=286429   target_h=10050   t=    3 ms
+[ 64/171] algo=bykat                  n=286429   target_h=10050   t=    7 ms
+[ 65/171] algo=melkman                n=286429   target_h=10050   t=    0 ms
+[ 66/171] algo=chan                   n=286429   target_h=10050   t=  229 ms
+Skipping jarvis at n=429143 (>5000)
+[ 67/171] algo=graham                 n=429143   target_h=10050   t=   34 ms
+[ 68/171] algo=my_graham              n=429143   target_h=10050   t=   53 ms
+[ 69/171] algo=ray_shooting_quickhull n=429143   target_h=10050   t=   29 ms
+[ 70/171] algo=toussaint              n=429143   target_h=10050   t=    5 ms
+[ 71/171] algo=bykat                  n=429143   target_h=10050   t=   10 ms
+[ 72/171] algo=melkman                n=429143   target_h=10050   t=    0 ms
+[ 73/171] algo=chan                   n=429143   target_h=10050   t=  339 ms
+[ 74/171] algo=graham                 n=429143   target_h=10050   t=   35 ms
+[ 75/171] algo=my_graham              n=429143   target_h=10050   t=   53 ms
+[ 76/171] algo=ray_shooting_quickhull n=429143   target_h=10050   t=   28 ms
+[ 77/171] algo=toussaint              n=429143   target_h=10050   t=    5 ms
+[ 78/171] algo=bykat                  n=429143   target_h=10050   t=   10 ms
+[ 79/171] algo=melkman                n=429143   target_h=10050   t=    0 ms
+[ 80/171] algo=chan                   n=429143   target_h=10050   t=  339 ms
+[ 81/171] algo=graham                 n=429143   target_h=10050   t=   35 ms
+[ 82/171] algo=my_graham              n=429143   target_h=10050   t=   54 ms
+[ 83/171] algo=ray_shooting_quickhull n=429143   target_h=10050   t=   28 ms
+[ 84/171] algo=toussaint              n=429143   target_h=10050   t=    5 ms
+[ 85/171] algo=bykat                  n=429143   target_h=10050   t=   10 ms
+[ 86/171] algo=melkman                n=429143   target_h=10050   t=    0 ms
+[ 87/171] algo=chan                   n=429143   target_h=10050   t=  402 ms
+Skipping jarvis at n=571857 (>5000)
+[ 88/171] algo=graham                 n=571857   target_h=10050   t=   48 ms
+[ 89/171] algo=my_graham              n=571857   target_h=10050   t=   73 ms
+[ 90/171] algo=ray_shooting_quickhull n=571857   target_h=10050   t=   37 ms
+[ 91/171] algo=toussaint              n=571857   target_h=10050   t=    7 ms
+[ 92/171] algo=bykat                  n=571857   target_h=10050   t=   13 ms
+[ 93/171] algo=melkman                n=571857   target_h=10050   t=    1 ms
+[ 94/171] algo=chan                   n=571857   target_h=10050   t=  449 ms
+[ 95/171] algo=graham                 n=571857   target_h=10050   t=   47 ms
+[ 96/171] algo=my_graham              n=571857   target_h=10050   t=   73 ms
+[ 97/171] algo=ray_shooting_quickhull n=571857   target_h=10050   t=   33 ms
+[ 98/171] algo=toussaint              n=571857   target_h=10050   t=    7 ms
+[ 99/171] algo=bykat                  n=571857   target_h=10050   t=   13 ms
+[100/171] algo=melkman                n=571857   target_h=10050   t=    1 ms
+[101/171] algo=chan                   n=571857   target_h=10050   t=  444 ms
+[102/171] algo=graham                 n=571857   target_h=10050   t=   47 ms
+[103/171] algo=my_graham              n=571857   target_h=10050   t=   74 ms
+[104/171] algo=ray_shooting_quickhull n=571857   target_h=10050   t=   35 ms
+[105/171] algo=toussaint              n=571857   target_h=10050   t=    7 ms
+[106/171] algo=bykat                  n=571857   target_h=10050   t=   13 ms
+[107/171] algo=melkman                n=571857   target_h=10050   t=    1 ms
+[108/171] algo=chan                   n=571857   target_h=10050   t=  490 ms
+Skipping jarvis at n=714571 (>5000)
+[109/171] algo=graham                 n=714571   target_h=10050   t=   63 ms
+[110/171] algo=my_graham              n=714571   target_h=10050   t=   95 ms
+[111/171] algo=ray_shooting_quickhull n=714571   target_h=10050   t=   44 ms
+[112/171] algo=toussaint              n=714571   target_h=10050   t=    9 ms
+[113/171] algo=bykat                  n=714571   target_h=10050   t=   17 ms
+[114/171] algo=melkman                n=714571   target_h=10050   t=    1 ms
+[115/171] algo=chan                   n=714571   target_h=10050   t=  588 ms
+[116/171] algo=graham                 n=714571   target_h=10050   t=   59 ms
+[117/171] algo=my_graham              n=714571   target_h=10050   t=   95 ms
+[118/171] algo=ray_shooting_quickhull n=714571   target_h=10050   t=   45 ms
+[119/171] algo=toussaint              n=714571   target_h=10050   t=    8 ms
+[120/171] algo=bykat                  n=714571   target_h=10050   t=   16 ms
+[121/171] algo=melkman                n=714571   target_h=10050   t=    1 ms
+[122/171] algo=chan                   n=714571   target_h=10050   t=  554 ms
+[123/171] algo=graham                 n=714571   target_h=10050   t=   63 ms
+[124/171] algo=my_graham              n=714571   target_h=10050   t=   92 ms
+[125/171] algo=ray_shooting_quickhull n=714571   target_h=10050   t=   43 ms
+[126/171] algo=toussaint              n=714571   target_h=10050   t=    8 ms
+[127/171] algo=bykat                  n=714571   target_h=10050   t=   16 ms
+[128/171] algo=melkman                n=714571   target_h=10050   t=    1 ms
+[129/171] algo=chan                   n=714571   target_h=10050   t=  555 ms
+Skipping jarvis at n=857286 (>5000)
+[130/171] algo=graham                 n=857286   target_h=10050   t=   74 ms
+[131/171] algo=my_graham              n=857286   target_h=10050   t=  120 ms
+[132/171] algo=ray_shooting_quickhull n=857286   target_h=10050   t=   53 ms
+[133/171] algo=toussaint              n=857286   target_h=10050   t=   10 ms
+[134/171] algo=bykat                  n=857286   target_h=10050   t=   19 ms
+[135/171] algo=melkman                n=857286   target_h=10050   t=    1 ms
+[136/171] algo=chan                   n=857286   target_h=10050   t=  696 ms
+[137/171] algo=graham                 n=857286   target_h=10050   t=   74 ms
+[138/171] algo=my_graham              n=857286   target_h=10050   t=  113 ms
+[139/171] algo=ray_shooting_quickhull n=857286   target_h=10050   t=   51 ms
+[140/171] algo=toussaint              n=857286   target_h=10050   t=   10 ms
+[141/171] algo=bykat                  n=857286   target_h=10050   t=   19 ms
+[142/171] algo=melkman                n=857286   target_h=10050   t=    1 ms
+[143/171] algo=chan                   n=857286   target_h=10050   t=  699 ms
+[144/171] algo=graham                 n=857286   target_h=10050   t=   73 ms
+[145/171] algo=my_graham              n=857286   target_h=10050   t=  119 ms
+[146/171] algo=ray_shooting_quickhull n=857286   target_h=10050   t=   49 ms
+[147/171] algo=toussaint              n=857286   target_h=10050   t=   10 ms
+[148/171] algo=bykat                  n=857286   target_h=10050   t=   19 ms
+[149/171] algo=melkman                n=857286   target_h=10050   t=    1 ms
+[150/171] algo=chan                   n=857286   target_h=10050   t=  694 ms
+Skipping jarvis at n=1000000 (>5000)
+[151/171] algo=graham                 n=1000000  target_h=10050   t=   86 ms
+[152/171] algo=my_graham              n=1000000  target_h=10050   t=  134 ms
+[153/171] algo=ray_shooting_quickhull n=1000000  target_h=10050   t=   56 ms
+[154/171] algo=toussaint              n=1000000  target_h=10050   t=   12 ms
+[155/171] algo=bykat                  n=1000000  target_h=10050   t=   23 ms
+[156/171] algo=melkman                n=1000000  target_h=10050   t=    1 ms
+[157/171] algo=chan                   n=1000000  target_h=10050   t=  808 ms
+[158/171] algo=graham                 n=1000000  target_h=10050   t=   86 ms
+[159/171] algo=my_graham              n=1000000  target_h=10050   t=  133 ms
+[160/171] algo=ray_shooting_quickhull n=1000000  target_h=10050   t=   55 ms
+[161/171] algo=toussaint              n=1000000  target_h=10050   t=   12 ms
+[162/171] algo=bykat                  n=1000000  target_h=10050   t=   22 ms
+[163/171] algo=melkman                n=1000000  target_h=10050   t=    2 ms
+[164/171] algo=chan                   n=1000000  target_h=10050   t=  796 ms
+[165/171] algo=graham                 n=1000000  target_h=10050   t=   92 ms
+[166/171] algo=my_graham              n=1000000  target_h=10050   t=  135 ms
+[167/171] algo=ray_shooting_quickhull n=1000000  target_h=10050   t=   57 ms
+[168/171] algo=toussaint              n=1000000  target_h=10050   t=   13 ms
+[169/171] algo=bykat                  n=1000000  target_h=10050   t=   22 ms
+[170/171] algo=melkman                n=1000000  target_h=10050   t=    1 ms
+[171/171] algo=chan                   n=1000000  target_h=10050   t=  788 ms
+
+Done.

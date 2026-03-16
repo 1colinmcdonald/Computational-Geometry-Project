@@ -163,6 +163,8 @@ void test_same_hull() {
   IS_TRUE(!same_hull(hull1, hull3));
 }
 
+
+
 int main(int argc, char *argv[]) {
   using std::chrono::duration;
   using std::chrono::duration_cast;
@@ -210,8 +212,6 @@ int main(int argc, char *argv[]) {
     algo = [](auto f, auto l, auto o) { return CGAL::ch_bykat(f, l, o); };
   } else if (algo_arg == "cgal_jarvis") {
     algo = [](auto f, auto l, auto o) { return CGAL::ch_jarvis(f, l, o); };
-  } else if (algo_arg == "melkman") {
-    algo = [](auto f, auto l, auto o) { return CGAL::ch_melkman(f, l, o); };
   } else if (algo_arg == "chan") {
     algo = [](auto f, auto l, auto o) { return chan(f, l, o); };
   }
@@ -227,13 +227,6 @@ int main(int argc, char *argv[]) {
   while (in >> x >> y) {
     pts.emplace_back(x, y);
   }
-  vector<Point_2> hull_3;
-  CGAL::ch_graham_andrew(pts.begin(), pts.end(), back_inserter(hull_3));
-  Point_2 target(0, -10);
-  Point_2 tangent =
-      *(get_tangent_point(hull_3.begin(), hull_3.end(), hull_3.begin(),
-                          hull_3.end() - 1, target, LL));
-  // conditional_hull(pts.begin(), pts.end(), 2, cond);
   auto t1 = std::chrono::high_resolution_clock::now();
   algo(pts.begin(), pts.end(), std::back_inserter(hull));
   auto t2 = std::chrono::high_resolution_clock::now();
@@ -243,18 +236,13 @@ int main(int argc, char *argv[]) {
       << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()
       << " ms\n";
 
-  // cout << "Result: " << endl;
-  // for (Point_2 p : hull) {
-  //   cout << p << endl;
+  // plot_hull(pts, hull);
+  // vector<Point_2> correct_hull;
+  // CGAL::ch_bykat(pts.begin(), pts.end(), std::back_inserter(correct_hull));
+  // assert((same_hull_simple(hull, correct_hull)));
+  // if (!same_hull_simple(hull, correct_hull)) {
+  //   cout << "Incorrect hull found" << endl;
   // }
-  // cout << "end of result" << endl;
-  plot_hull(pts, hull);
-  vector<Point_2> correct_hull;
-  CGAL::ch_bykat(pts.begin(), pts.end(), std::back_inserter(correct_hull));
-  assert((same_hull_simple(hull, correct_hull)));
-  if (!same_hull_simple(hull, correct_hull)) {
-    cout << "Incorrect hull found" << endl;
-  }
   return 0;
 }
 
@@ -731,9 +719,9 @@ bool conditional_hull(InputIt first, InputIt last, int h_star, OutputIt out) {
       }
     }
 
-    CGAL::ch_graham_andrew(sub_start, sub_end, back_inserter(convex_hulls[i]));
+    ch_graham_andrew(sub_start, sub_end, back_inserter(convex_hulls[i]));
   }
-
+ 
   // Find the exact index of global_min within its own mini-hull
   // Since the mini-hull is small (size h_star), this is O(h_star) once.
   auto it_in_hull = std::find(convex_hulls[start_hull_idx].begin(),
