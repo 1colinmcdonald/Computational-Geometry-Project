@@ -21,9 +21,11 @@
 #include <CGAL/enum.h>
 #include <cassert>
 #include <chrono>
+#include <cmath>
 #include <fstream>
 #include <functional>
 #include <iterator>
+
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 using namespace std;
 
@@ -184,7 +186,6 @@ int main(int argc, char *argv[]) {
   Point_2 p2(10, 0);
   Point_2 p3(0, 0);
   int orient_2_same = orientation(p1, p2, p3);
-  cout << "orient_2_same" << orient_2_same << endl;
   string algo_arg = argv[1];
   string num_points = argv[2];
   string distribution = argv[3];
@@ -232,7 +233,6 @@ int main(int argc, char *argv[]) {
   Point_2 tangent =
       *(get_tangent_point(hull_3.begin(), hull_3.end(), hull_3.begin(),
                           hull_3.end() - 1, target, LL));
-  cout << "Tangent" << tangent << endl;
   // conditional_hull(pts.begin(), pts.end(), 2, cond);
   auto t1 = std::chrono::high_resolution_clock::now();
   algo(pts.begin(), pts.end(), std::back_inserter(hull));
@@ -252,9 +252,7 @@ int main(int argc, char *argv[]) {
   vector<Point_2> correct_hull;
   CGAL::ch_bykat(pts.begin(), pts.end(), std::back_inserter(correct_hull));
   assert((same_hull_simple(hull, correct_hull)));
-  if (same_hull_simple(hull, correct_hull)) {
-    cout << "Correct hull found" << endl;
-  } else {
+  if (!same_hull_simple(hull, correct_hull)) {
     cout << "Incorrect hull found" << endl;
   }
   return 0;
@@ -308,7 +306,6 @@ void plot_hull(std::vector<Point_2> points, std::vector<Point_2> hull) {
   plot.add_polyline(t2, 2, "purple", true);
   plot.add_polyline(poly, 2, "blue", true);
   plot.write("debug.svg");
-  std::cout << "Wrote debug.svg\n";
 }
 
 vector<Point_2> jarvis_vector(const std::vector<Point_2> &points) {
@@ -701,22 +698,12 @@ template <class InputIt, class OutputIt>
 OutputIt chan(InputIt first, InputIt last, OutputIt out) {
   int h_star = 2;
   while (!conditional_hull(first, last, h_star, out)) {
-    cout << "Number of points: " << static_cast<int>(std::distance(first, last))
-         << endl;
-    cout << "h_star ** 2 " << h_star * h_star << endl;
-    if (h_star * h_star == 0) {
+    if (h_star > sqrt(numeric_limits<int>::max())) {
       h_star = static_cast<int>(std::distance(first, last));
-      continue;
+    } else {
+      h_star = std::min(h_star * h_star,
+                        static_cast<int>(std::distance(first, last)));
     }
-    int n_star =
-        std::min(h_star * h_star, static_cast<int>(std::distance(first, last)));
-    if (n_star == h_star) {
-      throw std::runtime_error("Chan failed even with h_star == n");
-    }
-    h_star =
-        std::min(h_star * h_star, static_cast<int>(std::distance(first, last)));
-    cout << "n_star: " << n_star << endl;
-    cout << "h_star: " << h_star << endl;
   }
   return out;
 }
@@ -770,7 +757,8 @@ bool conditional_hull(InputIt first, InputIt last, int h_star, OutputIt out) {
       int q_idx = -1;
 
       if (j == current_hull_idx) {
-        // OPTIMIZED: Just grab the next point in the cyclic order of this hull
+        // OPTIMIZED: Just grab the next point in the cyclic order of this
+        // hull
         q_idx = (current_point_in_hull_idx + 1) % convex_hulls[j].size();
         q = convex_hulls[j][q_idx];
       } else {
@@ -791,8 +779,8 @@ bool conditional_hull(InputIt first, InputIt last, int h_star, OutputIt out) {
         next_point_idx = q_idx;
         candidate_found = true;
       } else if (orientation(current_v, next_candidate, q) == CGAL::COLLINEAR) {
-        // If points are collinear, pick the one further away to avoid redundant
-        // points
+        // If points are collinear, pick the one further away to avoid
+        // redundant points
         if (squared_distance(current_v, q) >
             squared_distance(current_v, next_candidate)) {
           next_candidate = q;
@@ -805,7 +793,8 @@ bool conditional_hull(InputIt first, InputIt last, int h_star, OutputIt out) {
       int q2_idx = -1;
 
       if (j == current_hull_idx) {
-        // OPTIMIZED: Just grab the next point in the cyclic order of this hull
+        // OPTIMIZED: Just grab the next point in the cyclic order of this
+        // hull
         q2_idx = (current_point_in_hull_idx + 1) % convex_hulls[j].size();
         q2 = convex_hulls[j][q2_idx];
       } else {
@@ -825,9 +814,10 @@ bool conditional_hull(InputIt first, InputIt last, int h_star, OutputIt out) {
         next_hull_idx = j;
         next_point_idx = q2_idx;
         candidate_found = true;
-      } else if (orientation(current_v, next_candidate, q2) == CGAL::COLLINEAR) {
-        // If points are collinear, pick the one further away to avoid redundant
-        // points
+      } else if (orientation(current_v, next_candidate, q2) ==
+                 CGAL::COLLINEAR) {
+        // If points are collinear, pick the one further away to avoid
+        // redundant points
         if (squared_distance(current_v, q2) >
             squared_distance(current_v, next_candidate)) {
           next_candidate = q2;

@@ -28,9 +28,14 @@ ALGO_COLORS: dict[str, str] = {
     "graham": "#e06c1a",
     "my_graham": "#21a366",
     "ray_shooting_quickhull": "#8e44ad",
+    "chan": "#ff0000",
+    "toussaint": "#10e422",
+    "bykat": "#340c92",
+    "cgal_jarvis": "#dee110",
+    "melkman": "#1de9f4",
 }
 
-ALL_ALGOS = ["jarvis", "graham", "my_graham", "ray_shooting_quickhull"]
+ALL_ALGOS = ["jarvis", "graham", "my_graham", "ray_shooting_quickhull", "chan", "toussaint", "bykat", "cgal_jarvis", "melkman"]
 
 ALL_DISTRIBUTIONS = ["circle", "uniform", "gaussian", "square"]
 # Distributions that accept a target hull size

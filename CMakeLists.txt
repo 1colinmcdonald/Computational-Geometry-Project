@@ -13,7 +13,7 @@ FetchContent_Declare(
 )
 
 enable_testing()
-
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 FetchContent_MakeAvailable(googletest)
 
