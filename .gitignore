@@ -52,3 +52,9 @@ runner/__pycache__
 
 *.svg
 .idea
+
+.venv
+
+.cache
+CMakeFiles
+_deps
