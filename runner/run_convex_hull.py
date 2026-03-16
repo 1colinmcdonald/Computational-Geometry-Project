@@ -310,7 +310,7 @@ def run_pipeline(config: RunConfig) -> None:
             plot_distribution(points, config.distribution, DIST_PLOT_PATH)
             points_file = INPUT_DIR / f"custom_{n}.txt"
             write_points_file(points, points_file)
-
+            
             for algorithm in algos:
                 run_idx += 1
                 time_ms = run_benchmark(algorithm, n)

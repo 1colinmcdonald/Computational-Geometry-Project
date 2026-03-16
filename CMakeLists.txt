@@ -30,6 +30,8 @@ else()
 endif()
 
 add_executable(bin_search_test bin_search_test.cpp)
+
 target_link_libraries(bin_search_test PRIVATE GTest::gtest_main)
 include(GoogleTest)
 gtest_discover_tests(bin_search_test)
+add_executable(generate_points generate_points.cpp)
